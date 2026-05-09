@@ -12,7 +12,7 @@ from .nutrition_service import get_nutritional_info, evaluate_safety
 class FoodAnalysisViewSet(viewsets.ModelViewSet):
     serializer_class = FoodAnalysisSerializer
     parser_classes = (MultiPartParser, FormParser)
-    permission_classes = [IsAuthenticated]
+    permission_classes = [AllowAny]
 
     def get_queryset(self):
         if self.request.user and self.request.user.is_authenticated:

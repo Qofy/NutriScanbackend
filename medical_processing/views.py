@@ -2,7 +2,7 @@ from rest_framework import status, viewsets
 from rest_framework.decorators import action
 from rest_framework.response import Response
 from rest_framework.parsers import MultiPartParser, FormParser
-from rest_framework.permissions import IsAuthenticated
+from rest_framework.permissions import IsAuthenticated, AllowAny
 from .models import MedicalReport, ExtractedHealthInfo, Allergy, DietaryRestriction
 from .serializers import MedicalReportSerializer, MedicalReportListSerializer
 from .nlp_service import MedicalDocumentProcessor
@@ -10,7 +10,7 @@ from .nlp_service import MedicalDocumentProcessor
 class MedicalReportViewSet(viewsets.ModelViewSet):
     serializer_class = MedicalReportSerializer
     parser_classes = (MultiPartParser, FormParser)
-    permission_classes = [IsAuthenticated]
+    permission_classes = [AllowAny]
 
     def get_queryset(self):
         if self.request.user and self.request.user.is_authenticated:

@@ -9,7 +9,7 @@ class MedicalReport(models.Model):
         ('error', 'Error'),
     ]
 
-    user = models.ForeignKey(User, on_delete=models.CASCADE)
+    user = models.ForeignKey(User, on_delete=models.CASCADE, null=True, blank=True)
     document = models.FileField(upload_to='medical_reports/%Y/%m/%d/')
     uploaded_at = models.DateTimeField(auto_now_add=True)
     status = models.CharField(max_length=20, choices=STATUS_CHOICES, default='pending')

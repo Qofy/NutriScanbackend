@@ -8,7 +8,7 @@ class FoodAnalysis(models.Model):
         ('danger', 'Danger'),
     ]
 
-    user = models.ForeignKey(User, on_delete=models.CASCADE)
+    user = models.ForeignKey(User, on_delete=models.CASCADE, null=True, blank=True)
     image = models.FileField(upload_to='food_analysis/%Y/%m/%d/')
     uploaded_at = models.DateTimeField(auto_now_add=True)
     analysis_result = models.JSONField(default=dict)
