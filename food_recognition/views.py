@@ -44,6 +44,12 @@ class FoodAnalysisViewSet(viewsets.ModelViewSet):
 
         image_file = request.FILES['image']
         user_health_profile = request.data.get('health_profile', {})
+        if isinstance(user_health_profile, str):
+            import json
+            try:
+                user_health_profile = json.loads(user_health_profile)
+            except:
+                user_health_profile = {}
 
         detection_result = yolo_detector.detect_food(image_file)
 
@@ -54,8 +60,10 @@ class FoodAnalysisViewSet(viewsets.ModelViewSet):
         nutritional_info = get_nutritional_info(recognized_items)
         safety_level, safety_reason = evaluate_safety(recognized_items, user_health_profile)
 
+        user = request.user if request.user.is_authenticated else None
+
         food_analysis = FoodAnalysis.objects.create(
-            user=request.user,
+            user=user,
             image=image_file,
             recognized_items=recognized_items,
             nutritional_info=nutritional_info,
@@ -77,6 +85,14 @@ class FoodAnalysisViewSet(viewsets.ModelViewSet):
         recent_analyses = self.get_queryset()[:int(limit)]
         serializer = FoodAnalysisListSerializer(recent_analyses, many=True)
         return Response(serializer.data)
+
+    def destroy(self, request, pk=None):
+        try:
+            food_analysis = FoodAnalysis.objects.get(id=pk)
+            food_analysis.delete()
+            return Response({'success': True, 'message': 'Analysis deleted'}, status=status.HTTP_204_NO_CONTENT)
+        except FoodAnalysis.DoesNotExist:
+            return Response({'error': 'Analysis not found'}, status=status.HTTP_404_NOT_FOUND)
 
 class FoodItemViewSet(viewsets.ReadOnlyModelViewSet):
     queryset = FoodItem.objects.all()
