@@ -20,6 +20,24 @@ class FoodAnalysisViewSet(viewsets.ModelViewSet):
         return FoodAnalysis.objects.none()
 
     @action(detail=False, methods=['post'])
+    def detect(self, request):
+        if 'image' not in request.FILES:
+            return Response({'error': 'No image provided'}, status=status.HTTP_400_BAD_REQUEST)
+
+        image_file = request.FILES['image']
+        detection_result = yolo_detector.detect_food(image_file)
+
+        if not detection_result['success']:
+            return Response({'detected': False, 'items': [], 'confidence_score': 0}, status=status.HTTP_200_OK)
+
+        detected_items = detection_result['detected_items']
+        return Response({
+            'detected': len(detected_items) > 0,
+            'items': detected_items,
+            'confidence_score': detection_result['confidence_score']
+        }, status=status.HTTP_200_OK)
+
+    @action(detail=False, methods=['post'])
     def analyze(self, request):
         if 'image' not in request.FILES:
             return Response({'error': 'No image provided'}, status=status.HTTP_400_BAD_REQUEST)
