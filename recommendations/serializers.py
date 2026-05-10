@@ -4,7 +4,7 @@ from .models import Recommendation, RecommendationHistory
 class RecommendationSerializer(serializers.ModelSerializer):
     class Meta:
         model = Recommendation
-        fields = ['id', 'food_item', 'description', 'condition', 'benefit', 'severity', 'nutritional_info', 'created_at']
+        fields = ['id', 'food_item', 'description', 'condition', 'benefit', 'severity', 'nutritional_info', 'created_at', 'based_on_food_analysis', 'based_on_medical_report']
 
 class RecommendationHistorySerializer(serializers.ModelSerializer):
     recommendation = RecommendationSerializer(read_only=True)

@@ -224,3 +224,114 @@ class RecommendationEngine:
             })
 
         return tips
+
+    @staticmethod
+    def generate_ai_recommendations(health_profile, food_history):
+        """
+        Generate personalized recommendations using AI (Ollama Cloud → Claude AI fallback)
+        health_profile: {conditions: [], allergens: [], dietary_restrictions: []}
+        food_history: {recent_foods: [], nutritional_patterns: {}}
+        """
+        import json
+        import requests
+        from django.conf import settings
+        import logging
+
+        logger = logging.getLogger(__name__)
+
+        # Build the prompt
+        conditions_str = ', '.join(health_profile.get('conditions', [])) or 'None'
+        allergens_str = ', '.join(health_profile.get('allergens', [])) or 'None'
+        restrictions_str = ', '.join(health_profile.get('dietary_restrictions', [])) or 'None'
+
+        recent_foods = ', '.join([f.get('name', 'Unknown') for f in food_history.get('recent_foods', [])]) or 'No recent scans'
+
+        prompt = f"""You are a personalized nutrition advisor. Based on the user's health profile and eating history, generate 5 specific, actionable food recommendations.
+
+USER HEALTH PROFILE:
+- Conditions: {conditions_str}
+- Allergens: {allergens_str}
+- Dietary Restrictions: {restrictions_str}
+
+RECENT FOODS EATEN:
+{recent_foods}
+
+Return ONLY a valid JSON array with exactly 5 recommendation objects. Each object must have:
+{{
+  "food_item": "food name",
+  "emoji": "single emoji",
+  "description": "why this food is good (1-2 sentences)",
+  "condition": "primary condition it addresses or 'general'",
+  "benefit": "specific health benefit (1 sentence)",
+  "severity": "safe" (only safe foods),
+  "nutritional_info": {{"calories": number, "protein": number, "carbs": number, "fiber": number}}
+}}
+
+Be specific and personalized. Focus on foods that address their conditions and avoid allergens."""
+
+        # Try Ollama Cloud first
+        try:
+            ollama_key = getattr(settings, 'OLLAMA_API_KEY', None)
+            if ollama_key and ollama_key.strip():
+                logger.info("🔍 Trying Ollama Cloud for recommendations...")
+
+                response = requests.post(
+                    'https://ollama.com/api/chat',
+                    headers={
+                        'Authorization': f'Bearer {ollama_key}',
+                        'Content-Type': 'application/json'
+                    },
+                    json={
+                        'model': 'ministral-3:8b',
+                        'messages': [{'role': 'user', 'content': prompt}],
+                        'stream': False,
+                        'temperature': 0.5
+                    },
+                    timeout=10
+                )
+
+                if response.status_code == 200:
+                    data = response.json()
+                    response_text = data.get('message', {}).get('content', '').strip()
+
+                    # Clean up markdown if needed
+                    if response_text.startswith('```'):
+                        response_text = response_text.split('```')[1]
+                        if response_text.startswith('json'):
+                            response_text = response_text[4:]
+
+                    recs = json.loads(response_text)
+                    logger.info("✅ Generated recommendations via Ollama Cloud")
+                    return recs
+                else:
+                    logger.warning(f"Ollama Cloud returned {response.status_code}, trying Claude AI...")
+        except Exception as e:
+            logger.warning(f"Ollama Cloud failed: {str(e)}, trying Claude AI...")
+
+        # Fallback to Claude AI
+        try:
+            from anthropic import Anthropic
+
+            logger.info("🔍 Trying Claude AI for recommendations...")
+            client = Anthropic()
+
+            response = client.messages.create(
+                model="claude-opus-4-1",
+                max_tokens=1500,
+                messages=[{"role": "user", "content": prompt}]
+            )
+
+            response_text = response.content[0].text.strip()
+
+            # Clean up markdown if needed
+            if response_text.startswith('```'):
+                response_text = response_text.split('```')[1]
+                if response_text.startswith('json'):
+                    response_text = response_text[4:]
+
+            recs = json.loads(response_text)
+            logger.info("✅ Generated recommendations via Claude AI")
+            return recs
+        except Exception as e:
+            logger.error(f"Claude AI failed: {str(e)}")
+            raise Exception(f"Failed to generate recommendations: {str(e)}")

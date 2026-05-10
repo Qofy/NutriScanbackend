@@ -6,6 +6,7 @@ from rest_framework.permissions import IsAuthenticated, AllowAny
 from .models import MedicalReport, ExtractedHealthInfo, Allergy, DietaryRestriction
 from .serializers import MedicalReportSerializer, MedicalReportListSerializer
 from .nlp_service import MedicalDocumentProcessor
+from recommendations.models import Recommendation
 
 class MedicalReportViewSet(viewsets.ModelViewSet):
     serializer_class = MedicalReportSerializer
@@ -16,6 +17,17 @@ class MedicalReportViewSet(viewsets.ModelViewSet):
         if self.request.user and self.request.user.is_authenticated:
             return MedicalReport.objects.filter(user=self.request.user)
         return MedicalReport.objects.filter(user=None)
+
+    def destroy(self, request, *args, **kwargs):
+        """Delete medical report and associated recommendations"""
+        report = self.get_object()
+        user = request.user if request.user.is_authenticated else None
+
+        # Delete all recommendations for this user
+        # (since they were generated based on this report)
+        Recommendation.objects.filter(user=user).delete()
+
+        return super().destroy(request, *args, **kwargs)
 
     @action(detail=False, methods=['post'])
     def upload(self, request):
