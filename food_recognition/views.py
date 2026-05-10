@@ -1,7 +1,7 @@
 from rest_framework import status, viewsets
 from rest_framework.decorators import action
 from rest_framework.response import Response
-from rest_framework.parsers import MultiPartParser, FormParser
+from rest_framework.parsers import MultiPartParser, FormParser, JSONParser
 from rest_framework.permissions import IsAuthenticated, AllowAny
 from django.shortcuts import get_object_or_404
 from .models import FoodAnalysis, FoodItem
@@ -14,13 +14,56 @@ logger = logging.getLogger(__name__)
 
 class FoodAnalysisViewSet(viewsets.ModelViewSet):
     serializer_class = FoodAnalysisSerializer
-    parser_classes = (MultiPartParser, FormParser)
+    parser_classes = (JSONParser, MultiPartParser, FormParser)
     permission_classes = [AllowAny]
 
     def get_queryset(self):
         if self.request.user and self.request.user.is_authenticated:
             return FoodAnalysis.objects.filter(user=self.request.user)
         return FoodAnalysis.objects.none()
+
+    @action(detail=False, methods=['post'])
+    def manual_analyze(self, request):
+        try:
+            food_items = request.data.get('food_items', [])
+            if not food_items:
+                return Response({'error': 'No food items provided'}, status=status.HTTP_400_BAD_REQUEST)
+
+            logger.info(f"🔍 Starting manual food analysis for {len(food_items)} items")
+
+            nutritional_info = get_nutritional_info(food_items)
+            logger.info(f"✓ Got nutrition data")
+
+            user_health_profile = request.data.get('health_profile', {})
+            safety_level, safety_reason = evaluate_safety(food_items, user_health_profile)
+            logger.info(f"🛡️ Safety level: {safety_level}")
+
+            user = request.user if request.user.is_authenticated else None
+
+            food_analysis = FoodAnalysis.objects.create(
+                user=user,
+                image=None,
+                recognized_items=food_items,
+                nutritional_info=nutritional_info,
+                safety_level=safety_level,
+                confidence_score=1.0,
+                analysis_result={
+                    'detection': {'detected_items': food_items, 'method': 'manual'},
+                    'nutrition': nutritional_info,
+                    'safety_reason': safety_reason
+                }
+            )
+
+            logger.info(f"✓ Created food analysis: {food_analysis.id}")
+            serializer = FoodAnalysisSerializer(food_analysis, context={'request': request})
+            return Response(serializer.data, status=status.HTTP_201_CREATED)
+
+        except Exception as e:
+            logger.error(f"❌ Manual analyze error: {str(e)}", exc_info=True)
+            return Response(
+                {'error': f'Analysis failed: {str(e)}'},
+                status=status.HTTP_500_INTERNAL_SERVER_ERROR
+            )
 
     @action(detail=False, methods=['post'])
     def detect(self, request):

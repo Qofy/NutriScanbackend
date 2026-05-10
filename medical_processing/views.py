@@ -15,7 +15,7 @@ class MedicalReportViewSet(viewsets.ModelViewSet):
     def get_queryset(self):
         if self.request.user and self.request.user.is_authenticated:
             return MedicalReport.objects.filter(user=self.request.user)
-        return MedicalReport.objects.none()
+        return MedicalReport.objects.filter(user=None)
 
     @action(detail=False, methods=['post'])
     def upload(self, request):
@@ -25,7 +25,7 @@ class MedicalReportViewSet(viewsets.ModelViewSet):
         document = request.FILES['document']
 
         medical_report = MedicalReport.objects.create(
-            user=request.user,
+            user=request.user if request.user.is_authenticated else None,
             document=document,
             status='processing'
         )
@@ -68,7 +68,7 @@ class MedicalReportViewSet(viewsets.ModelViewSet):
             medical_report.status = 'completed'
             medical_report.save()
 
-            serializer = MedicalReportSerializer(medical_report)
+            serializer = MedicalReportSerializer(medical_report, context={'request': request})
             return Response(serializer.data, status=status.HTTP_201_CREATED)
 
         except Exception as e:
@@ -81,7 +81,7 @@ class MedicalReportViewSet(viewsets.ModelViewSet):
     def recent(self, request):
         limit = request.query_params.get('limit', 10)
         recent_reports = self.get_queryset()[:int(limit)]
-        serializer = MedicalReportListSerializer(recent_reports, many=True)
+        serializer = MedicalReportListSerializer(recent_reports, many=True, context={'request': request})
         return Response(serializer.data)
 
     @action(detail=False, methods=['get'])

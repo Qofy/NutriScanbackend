@@ -30,7 +30,7 @@ class YOLOFoodDetector:
 
         try:
             image = Image.open(image_file).convert('RGB')
-            results = self.model.predict(image, conf=0.3)
+            results = self.model.predict(image, conf=0.15)
 
             detected_items = []
             for result in results:
