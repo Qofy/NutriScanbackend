@@ -12,22 +12,22 @@ class UserHealthProfileViewSet(viewsets.ViewSet):
     permission_classes = [AllowAny]
     def retrieve(self, request):
         try:
-            profile = UserHealthProfile.objects.get(user=request.user)
+            profile, created = UserHealthProfile.objects.get_or_create(user=request.user)
             serializer = UserHealthProfileSerializer(profile)
             return Response(serializer.data)
-        except UserHealthProfile.DoesNotExist:
-            return Response({'error': 'Health profile not found'}, status=status.HTTP_404_NOT_FOUND)
+        except Exception as e:
+            return Response({'error': str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
     def update(self, request, pk=None):
         try:
-            profile = UserHealthProfile.objects.get(user=request.user)
+            profile, created = UserHealthProfile.objects.get_or_create(user=request.user)
             serializer = UserHealthProfileSerializer(profile, data=request.data, partial=True)
             if serializer.is_valid():
                 serializer.save()
                 return Response(serializer.data)
             return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
-        except UserHealthProfile.DoesNotExist:
-            return Response({'error': 'Health profile not found'}, status=status.HTTP_404_NOT_FOUND)
+        except Exception as e:
+            return Response({'error': str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
     @action(detail=False, methods=['post'])
     def create_profile(self, request):
