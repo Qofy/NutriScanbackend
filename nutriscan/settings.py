@@ -128,3 +128,8 @@ ML_MODELS = {
 if not all(FIREBASE_CONFIG.values()):
     print("⚠️  Firebase not configured. Some features may not work.")
     FIREBASE_CONFIG = None
+
+# External APIs
+USDA_API_KEY = os.getenv('USDA_API_KEY', '')
+ANTHROPIC_API_KEY = os.getenv('ANTHROPIC_API_KEY', '')
+OLLAMA_API_KEY = os.getenv('OLLAMA_API_KEY', '')

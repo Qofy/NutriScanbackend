@@ -8,6 +8,9 @@ from .models import FoodAnalysis, FoodItem
 from .serializers import FoodAnalysisSerializer, FoodItemSerializer, FoodAnalysisListSerializer
 from .yolo_service import yolo_detector
 from .nutrition_service import get_nutritional_info, evaluate_safety
+import logging
+
+logger = logging.getLogger(__name__)
 
 class FoodAnalysisViewSet(viewsets.ModelViewSet):
     serializer_class = FoodAnalysisSerializer
@@ -39,51 +42,68 @@ class FoodAnalysisViewSet(viewsets.ModelViewSet):
 
     @action(detail=False, methods=['post'])
     def analyze(self, request):
-        if 'image' not in request.FILES:
-            return Response({'error': 'No image provided'}, status=status.HTTP_400_BAD_REQUEST)
+        try:
+            if 'image' not in request.FILES:
+                return Response({'error': 'No image provided'}, status=status.HTTP_400_BAD_REQUEST)
 
-        image_file = request.FILES['image']
-        user_health_profile = request.data.get('health_profile', {})
-        if isinstance(user_health_profile, str):
-            import json
-            try:
-                user_health_profile = json.loads(user_health_profile)
-            except:
-                user_health_profile = {}
+            image_file = request.FILES['image']
+            user_health_profile = request.data.get('health_profile', {})
+            if isinstance(user_health_profile, str):
+                import json
+                try:
+                    user_health_profile = json.loads(user_health_profile)
+                except:
+                    user_health_profile = {}
 
-        detection_result = yolo_detector.detect_food(image_file)
+            logger.info(f"🔍 Starting food detection for image: {image_file.name}")
+            detection_result = yolo_detector.detect_food(image_file)
 
-        if not detection_result['success']:
-            return Response({'error': 'Detection failed'}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+            if not detection_result['success']:
+                logger.error(f"❌ Detection failed: {detection_result}")
+                return Response({'error': 'Detection failed'}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
-        recognized_items = detection_result['detected_items']
-        nutritional_info = get_nutritional_info(recognized_items)
-        safety_level, safety_reason = evaluate_safety(recognized_items, user_health_profile)
+            recognized_items = detection_result['detected_items']
+            logger.info(f"✓ Detected {len(recognized_items)} food items")
 
-        user = request.user if request.user.is_authenticated else None
+            logger.info(f"📊 Fetching nutritional info...")
+            nutritional_info = get_nutritional_info(recognized_items)
+            logger.info(f"✓ Got nutrition data")
 
-        food_analysis = FoodAnalysis.objects.create(
-            user=user,
-            image=image_file,
-            recognized_items=recognized_items,
-            nutritional_info=nutritional_info,
-            safety_level=safety_level,
-            confidence_score=detection_result['confidence_score'],
-            analysis_result={
-                'detection': detection_result,
-                'nutrition': nutritional_info,
-                'safety_reason': safety_reason
-            }
-        )
+            safety_level, safety_reason = evaluate_safety(recognized_items, user_health_profile)
+            logger.info(f"🛡️ Safety level: {safety_level}")
 
-        serializer = FoodAnalysisSerializer(food_analysis)
-        return Response(serializer.data, status=status.HTTP_201_CREATED)
+            user = request.user if request.user.is_authenticated else None
+
+            food_analysis = FoodAnalysis.objects.create(
+                user=user,
+                image=image_file,
+                recognized_items=recognized_items,
+                nutritional_info=nutritional_info,
+                safety_level=safety_level,
+                confidence_score=detection_result['confidence_score'],
+                analysis_result={
+                    'detection': detection_result,
+                    'nutrition': nutritional_info,
+                    'safety_reason': safety_reason
+                }
+            )
+
+            logger.info(f"✓ Created food analysis: {food_analysis.id}")
+            serializer = FoodAnalysisSerializer(food_analysis, context={'request': request})
+            return Response(serializer.data, status=status.HTTP_201_CREATED)
+
+        except Exception as e:
+            logger.error(f"❌ Analyze endpoint error: {str(e)}", exc_info=True)
+            return Response(
+                {'error': f'Analysis failed: {str(e)}'},
+                status=status.HTTP_500_INTERNAL_SERVER_ERROR
+            )
 
     @action(detail=False, methods=['get'])
     def recent(self, request):
         limit = request.query_params.get('limit', 10)
         recent_analyses = self.get_queryset()[:int(limit)]
-        serializer = FoodAnalysisListSerializer(recent_analyses, many=True)
+        serializer = FoodAnalysisListSerializer(recent_analyses, many=True, context={'request': request})
         return Response(serializer.data)
 
     def destroy(self, request, pk=None):
