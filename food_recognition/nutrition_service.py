@@ -5,14 +5,152 @@ from django.conf import settings
 
 logger = logging.getLogger(__name__)
 
-HEALTH_CONDITION_RESTRICTIONS = {
+def get_food_restrictions_from_ollama(condition_name, severity='unknown', confidence=0.5):
+    """Use Ollama to generate food restrictions for a health condition"""
+    try:
+        api_key = getattr(settings, 'OLLAMA_API_KEY', None)
+        if not api_key or not api_key.strip():
+            logger.info('❌ Ollama API key not configured for restrictions')
+            return None
+
+        logger.info(f'🔍 Getting food restrictions from Ollama for: {condition_name}')
+
+        url = 'https://ollama.com/api/chat'
+        headers = {
+            'Authorization': f'Bearer {api_key}',
+            'Content-Type': 'application/json'
+        }
+
+        prompt = f"""You are a nutritionist. A patient has the following health condition:
+
+Condition: {condition_name}
+Severity: {severity}
+Confidence: {confidence*100:.0f}%
+
+Generate a list of foods this patient should AVOID and foods they should PREFER for this condition.
+
+Return ONLY a JSON object (no markdown, no other text) with this exact structure:
+{{
+    "avoid": ["food1", "food2", "food3", ...],
+    "prefer": ["food1", "food2", "food3", ...]
+}}
+
+Be specific and practical with real food names."""
+
+        payload = {
+            'model': 'ministral-3:8b',
+            'messages': [{'role': 'user', 'content': prompt}],
+            'stream': False,
+            'temperature': 0.3
+        }
+
+        response = requests.post(url, json=payload, headers=headers, timeout=10)
+        if response.status_code == 200:
+            data = response.json()
+            content = data.get('message', {}).get('content', '').strip()
+            try:
+                restrictions = json.loads(content)
+                logger.info(f'✅ Got Ollama restrictions for {condition_name}')
+                return restrictions
+            except json.JSONDecodeError:
+                logger.warning(f'Failed to parse Ollama response for {condition_name}')
+                return None
+        else:
+            logger.warning(f'Ollama API error: {response.status_code}')
+            return None
+    except Exception as e:
+        logger.warning(f'Ollama restrictions error for {condition_name}: {e}')
+        return None
+
+def get_food_restrictions_from_claude(condition_name, severity='unknown', confidence=0.5):
+    """Use Claude to generate food restrictions for a health condition"""
+    try:
+        api_key = getattr(settings, 'ANTHROPIC_API_KEY', None)
+        if not api_key or not api_key.strip():
+            logger.info('❌ Claude API key not configured for restrictions')
+            return None
+
+        logger.info(f'🔍 Getting food restrictions from Claude for: {condition_name}')
+
+        url = 'https://api.anthropic.com/v1/messages'
+        headers = {
+            'x-api-key': api_key,
+            'anthropic-version': '2023-06-01',
+            'content-type': 'application/json'
+        }
+
+        prompt = f"""You are a nutritionist. A patient has the following health condition:
+
+Condition: {condition_name}
+Severity: {severity}
+Confidence: {confidence*100:.0f}%
+
+Generate a list of foods this patient should AVOID and foods they should PREFER for this condition.
+
+Return ONLY a JSON object (no markdown, no other text) with this exact structure:
+{{
+    "avoid": ["food1", "food2", "food3", ...],
+    "prefer": ["food1", "food2", "food3", ...]
+}}
+
+Be specific and practical with real food names."""
+
+        payload = {
+            'model': 'claude-opus-4-1',
+            'max_tokens': 500,
+            'messages': [{'role': 'user', 'content': prompt}]
+        }
+
+        response = requests.post(url, json=payload, headers=headers, timeout=10)
+        if response.status_code == 200:
+            data = response.json()
+            content = data.get('content', [{}])[0].get('text', '').strip()
+            try:
+                restrictions = json.loads(content)
+                logger.info(f'✅ Got Claude restrictions for {condition_name}')
+                return restrictions
+            except json.JSONDecodeError:
+                logger.warning(f'Failed to parse Claude response for {condition_name}')
+                return None
+        else:
+            logger.warning(f'Claude API error: {response.status_code}')
+            return None
+    except Exception as e:
+        logger.warning(f'Claude restrictions error for {condition_name}: {e}')
+        return None
+
+def get_food_restrictions(condition_name, severity='unknown', confidence=0.5):
+    """Get food restrictions for a health condition - try Ollama then Claude (with caching)"""
+    # Try Ollama first
+    restrictions = get_food_restrictions_from_ollama(condition_name, severity, confidence)
+    if restrictions:
+        return restrictions
+
+    # Fall back to Claude
+    restrictions = get_food_restrictions_from_claude(condition_name, severity, confidence)
+    if restrictions:
+        return restrictions
+
+    # Fall back to hardcoded defaults if AI fails
+    logger.warning(f'AI failed for {condition_name}, using defaults')
+    return HEALTH_CONDITION_RESTRICTIONS_DEFAULT.get(condition_name.lower(), {'avoid': [], 'prefer': []})
+
+HEALTH_CONDITION_RESTRICTIONS_DEFAULT = {
     'diabetes': {
-        'avoid': ['pizza', 'sugary drinks', 'soda', 'candy', 'cookies'],
-        'prefer': ['salad', 'apple', 'carrot', 'spinach', 'broccoli']
+        'avoid': ['pizza', 'sugary drinks', 'soda', 'candy', 'cookies', 'desserts', 'ice cream'],
+        'prefer': ['salad', 'apple', 'carrot', 'spinach', 'broccoli', 'fish']
     },
     'hypertension': {
-        'avoid': ['pizza', 'salt-heavy foods', 'cured meats', 'fried foods'],
-        'prefer': ['salad', 'banana', 'grilled chicken', 'fresh vegetables']
+        'avoid': ['pizza', 'salt-heavy foods', 'cured meats', 'fried foods', 'salty snacks', 'processed foods'],
+        'prefer': ['salad', 'banana', 'grilled chicken', 'fresh vegetables', 'fish']
+    },
+    'heart disease': {
+        'avoid': ['fried foods', 'saturated fat', 'sugary drinks', 'candy', 'processed foods', 'salty foods', 'pizza'],
+        'prefer': ['fish', 'vegetables', 'fruits', 'whole grains', 'olive oil']
+    },
+    'high blood pressure': {
+        'avoid': ['pizza', 'salt-heavy foods', 'cured meats', 'fried foods', 'salty snacks', 'processed foods'],
+        'prefer': ['salad', 'banana', 'grilled chicken', 'fresh vegetables', 'fish']
     },
     'allergies': {
         'peanut_allergy': {
@@ -202,26 +340,55 @@ def get_nutritional_info(food_items):
 
 def evaluate_safety(food_items, health_profile):
     """Evaluate food safety based on user health conditions and allergies"""
-    food_names = [item['name'].lower() for item in food_items]
-    conditions = health_profile.get('conditions', [])
-    allergens = health_profile.get('allergens', [])
+    if not food_items or not health_profile:
+        return 'safe', 'No health profile to evaluate against'
+
+    food_names = [item['name'].lower().strip() for item in food_items]
+    conditions = [c.lower().strip() for c in health_profile.get('conditions', [])] if health_profile.get('conditions') else []
+    allergens = [a.lower().strip() for a in health_profile.get('allergens', [])] if health_profile.get('allergens') else []
+
+    # Early exit if no conditions or allergens
+    if not conditions and not allergens:
+        return 'safe', 'This food appears to be safe for your health profile'
+
+    # Check for allergens in food names (substring matching)
+    for allergen in allergens:
+        # Extract base allergen name (e.g., "peanut allergy" -> "peanut")
+        allergen_base = allergen.replace('allergy', '').replace('allergic', '').replace('allergies', '').replace('allergy to', '').strip()
+        if not allergen_base or allergen_base == 'food':
+            allergen_base = allergen
+
+        # Check if allergen matches food (with some flexibility)
+        for food in food_names:
+            if allergen_base in food or food in allergen_base:
+                return 'danger', f'⚠️ This food contains {allergen} which you are allergic to'
 
     # Check for restricted foods based on health conditions
     restricted_foods = []
+    matched_conditions = []
+
     for condition in conditions:
-        if condition.lower() in HEALTH_CONDITION_RESTRICTIONS:
-            restricted = HEALTH_CONDITION_RESTRICTIONS[condition.lower()].get('avoid', [])
-            restricted_foods.extend(restricted)
+        # Skip empty conditions
+        if not condition:
+            continue
 
+        # Get food restrictions from AI (Ollama → Claude)
+        restrictions = get_food_restrictions(condition)
+        if restrictions:
+            avoid_foods = restrictions.get('avoid', [])
+            restricted_foods.extend(avoid_foods)
+            matched_conditions.append(condition)
+            logger.info(f"✓ Got restrictions from AI for condition '{condition}': {len(avoid_foods)} foods to avoid")
+        else:
+            logger.info(f"⚠️ Could not get restrictions for condition '{condition}'")
+
+    # Check if any food is in restricted list
     for food in food_names:
-        if food in restricted_foods:
-            return 'caution', f'This food may not be suitable for {", ".join(conditions)}'
-
-    # Check for allergens in food names (basic string matching)
-    for allergen in allergens:
-        allergen_lower = allergen.lower()
-        for food in food_names:
-            if allergen_lower in food:
-                return 'danger', f'This food contains {allergen} which you are allergic to'
+        for restricted in restricted_foods:
+            restricted_lower = restricted.lower().strip()
+            if food == restricted_lower or restricted_lower in food or food in restricted_lower:
+                conditions_str = ', '.join(matched_conditions) if matched_conditions else ', '.join(conditions)
+                logger.info(f"🛑 Food '{food}' is restricted for {conditions_str}")
+                return 'caution', f'This food is not recommended for your health profile ({conditions_str})'
 
     return 'safe', 'This food appears to be safe for your health profile'

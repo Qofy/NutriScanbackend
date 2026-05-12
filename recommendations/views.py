@@ -157,6 +157,18 @@ class RecommendationViewSet(viewsets.ModelViewSet):
                         else:
                             dietary_restrictions.append(restriction)
 
+            # If no conditions from medical reports, try user profile settings
+            if not conditions and user:
+                try:
+                    from user_profile.models import UserHealthProfile
+                    profile = UserHealthProfile.objects.get(user=user)
+                    conditions = profile.health_conditions or []
+                    allergens.extend(profile.allergies or [])
+                    dietary_restrictions.extend(profile.dietary_restrictions or [])
+                    logger.info(f"✓ Got health profile from user settings")
+                except:
+                    pass
+
             # Build health profile
             health_profile = {
                 'conditions': list(set(conditions)),
@@ -176,11 +188,19 @@ class RecommendationViewSet(viewsets.ModelViewSet):
             # Save recommendations to database
             created_recommendations = []
             for rec in ai_recommendations:
+                # Get condition from AI response
+                rec_condition = rec.get('condition', 'general')
+
+                # Validate that condition is one of user's actual conditions
+                # If not, use the first user condition as fallback
+                if rec_condition.lower() not in [c.lower() for c in health_profile.get('conditions', [])]:
+                    rec_condition = health_profile.get('conditions', ['general'])[0]
+
                 recommendation_obj = Recommendation.objects.create(
                     user=user,
                     food_item=rec.get('food_item', 'Unknown'),
                     description=rec.get('description', ''),
-                    condition=rec.get('condition', 'general'),
+                    condition=rec_condition,
                     benefit=rec.get('benefit', ''),
                     severity=rec.get('severity', 'safe'),
                     nutritional_info=rec.get('nutritional_info', {}),

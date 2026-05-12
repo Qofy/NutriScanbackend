@@ -1,148 +1,148 @@
-RECOMMENDATION_DATABASE = [
-    {
-        'food_item': 'Carrots',
-        'emoji': '🥕',
-        'description': 'Rich in beta-carotene and vitamin A. Excellent for eye health and immune function.',
-        'conditions': ['diabetes', 'heart_disease'],
-        'benefit': 'Low glycemic index helps maintain stable blood sugar levels',
-        'severity': 'safe',
-        'nutrition': {
-            'calories': 41,
-            'protein': 0.9,
-            'carbs': 10,
-            'fiber': 2.8,
-        }
-    },
-    {
-        'food_item': 'Spinach',
-        'emoji': '🥬',
-        'description': 'Nutrient-dense leafy green with excellent mineral content and low calories.',
-        'conditions': ['hypertension', 'diabetes', 'heart_disease'],
-        'benefit': 'High in potassium which helps regulate blood pressure',
-        'severity': 'safe',
-        'nutrition': {
-            'calories': 23,
-            'protein': 2.7,
-            'carbs': 3.6,
-            'fiber': 2.2,
-        }
-    },
-    {
-        'food_item': 'Blueberries',
-        'emoji': '🫐',
-        'description': 'Packed with antioxidants and polyphenols for cardiovascular health.',
-        'conditions': ['hypertension', 'heart_disease'],
-        'benefit': 'Anthocyanins help improve blood vessel function',
-        'severity': 'safe',
-        'nutrition': {
-            'calories': 57,
-            'protein': 0.7,
-            'carbs': 14.5,
-            'fiber': 2.4,
-        }
-    },
-    {
-        'food_item': 'Salmon',
-        'emoji': '🐟',
-        'description': 'Rich in omega-3 fatty acids that support heart and brain health.',
-        'conditions': ['heart_disease', 'hypertension'],
-        'benefit': 'Reduces inflammation and supports healthy cholesterol levels',
-        'severity': 'safe',
-        'nutrition': {
-            'calories': 208,
-            'protein': 20,
-            'carbs': 0,
-            'fat': 13,
-        }
-    },
-    {
-        'food_item': 'Apples',
-        'emoji': '🍎',
-        'description': 'Excellent source of fiber and vitamin C with natural sweetness.',
-        'conditions': ['diabetes', 'heart_disease'],
-        'benefit': 'Soluble fiber helps regulate blood sugar and cholesterol',
-        'severity': 'safe',
-        'nutrition': {
-            'calories': 95,
-            'protein': 0.5,
-            'carbs': 25,
-            'fiber': 4.4,
-        }
-    },
-    {
-        'food_item': 'Broccoli',
-        'emoji': '🥦',
-        'description': 'Cruciferous vegetable rich in vitamins C, K, and fiber.',
-        'conditions': ['diabetes', 'heart_disease', 'hypertension'],
-        'benefit': 'Supports cardiovascular and metabolic health',
-        'severity': 'safe',
-        'nutrition': {
-            'calories': 34,
-            'protein': 2.8,
-            'carbs': 7,
-            'fiber': 2.4,
-        }
-    },
-    {
-        'food_item': 'Bananas',
-        'emoji': '🍌',
-        'description': 'Natural source of potassium and B vitamins for energy.',
-        'conditions': ['hypertension', 'heart_disease'],
-        'benefit': 'High potassium content helps regulate blood pressure naturally',
-        'severity': 'safe',
-        'nutrition': {
-            'calories': 89,
-            'protein': 1.1,
-            'carbs': 23,
-            'fiber': 2.6,
-        }
-    },
-    {
-        'food_item': 'Almonds',
-        'emoji': '🌰',
-        'description': 'Tree nuts packed with healthy unsaturated fats and protein.',
-        'conditions': ['heart_disease', 'cholesterol'],
-        'benefit': 'May help lower cholesterol and reduce heart disease risk',
-        'severity': 'safe',
-        'nutrition': {
-            'calories': 579,
-            'protein': 21.2,
-            'carbs': 21.6,
-            'fat': 49.9,
-        },
-        'allergens': ['tree_nuts']
-    },
-    {
-        'food_item': 'Peanuts',
-        'emoji': '🥜',
-        'description': 'Good protein source with healthy fats, but caution for allergy sufferers.',
-        'conditions': [],
-        'benefit': 'Contains aflatoxins - avoid if you have peanut allergies',
-        'severity': 'danger',
-        'nutrition': {
-            'calories': 567,
-            'protein': 25.8,
-            'carbs': 16.1,
-            'fat': 49.2,
-        },
-        'allergens': ['peanuts']
-    },
-    {
-        'food_item': 'Pizza',
-        'emoji': '🍕',
-        'description': 'High sodium and saturated fat content, not ideal for certain conditions.',
-        'conditions': [],
-        'benefit': 'Occasional consumption only - high sodium affects blood pressure',
-        'severity': 'caution',
-        'nutrition': {
-            'calories': 285,
-            'protein': 12,
-            'carbs': 36,
-            'fat': 10,
-        },
-        'avoid_for_conditions': ['hypertension', 'diabetes', 'heart_disease']
-    },
-]
+# RECOMMENDATION_DATABASE = [
+#     {
+#         'food_item': 'Carrots',
+#         'emoji': '🥕',
+#         'description': 'Rich in beta-carotene and vitamin A. Excellent for eye health and immune function.',
+#         'conditions': ['diabetes', 'heart_disease'],
+#         'benefit': 'Low glycemic index helps maintain stable blood sugar levels',
+#         'severity': 'safe',
+#         'nutrition': {
+#             'calories': 41,
+#             'protein': 0.9,
+#             'carbs': 10,
+#             'fiber': 2.8,
+#         }
+#     },
+#     {
+#         'food_item': 'Spinach',
+#         'emoji': '🥬',
+#         'description': 'Nutrient-dense leafy green with excellent mineral content and low calories.',
+#         'conditions': ['hypertension', 'diabetes', 'heart_disease'],
+#         'benefit': 'High in potassium which helps regulate blood pressure',
+#         'severity': 'safe',
+#         'nutrition': {
+#             'calories': 23,
+#             'protein': 2.7,
+#             'carbs': 3.6,
+#             'fiber': 2.2,
+#         }
+#     },
+#     {
+#         'food_item': 'Blueberries',
+#         'emoji': '🫐',
+#         'description': 'Packed with antioxidants and polyphenols for cardiovascular health.',
+#         'conditions': ['hypertension', 'heart_disease'],
+#         'benefit': 'Anthocyanins help improve blood vessel function',
+#         'severity': 'safe',
+#         'nutrition': {
+#             'calories': 57,
+#             'protein': 0.7,
+#             'carbs': 14.5,
+#             'fiber': 2.4,
+#         }
+#     },
+#     {
+#         'food_item': 'Salmon',
+#         'emoji': '🐟',
+#         'description': 'Rich in omega-3 fatty acids that support heart and brain health.',
+#         'conditions': ['heart_disease', 'hypertension'],
+#         'benefit': 'Reduces inflammation and supports healthy cholesterol levels',
+#         'severity': 'safe',
+#         'nutrition': {
+#             'calories': 208,
+#             'protein': 20,
+#             'carbs': 0,
+#             'fat': 13,
+#         }
+#     },
+#     {
+#         'food_item': 'Apples',
+#         'emoji': '🍎',
+#         'description': 'Excellent source of fiber and vitamin C with natural sweetness.',
+#         'conditions': ['diabetes', 'heart_disease'],
+#         'benefit': 'Soluble fiber helps regulate blood sugar and cholesterol',
+#         'severity': 'safe',
+#         'nutrition': {
+#             'calories': 95,
+#             'protein': 0.5,
+#             'carbs': 25,
+#             'fiber': 4.4,
+#         }
+#     },
+#     {
+#         'food_item': 'Broccoli',
+#         'emoji': '🥦',
+#         'description': 'Cruciferous vegetable rich in vitamins C, K, and fiber.',
+#         'conditions': ['diabetes', 'heart_disease', 'hypertension'],
+#         'benefit': 'Supports cardiovascular and metabolic health',
+#         'severity': 'safe',
+#         'nutrition': {
+#             'calories': 34,
+#             'protein': 2.8,
+#             'carbs': 7,
+#             'fiber': 2.4,
+#         }
+#     },
+#     {
+#         'food_item': 'Bananas',
+#         'emoji': '🍌',
+#         'description': 'Natural source of potassium and B vitamins for energy.',
+#         'conditions': ['hypertension', 'heart_disease'],
+#         'benefit': 'High potassium content helps regulate blood pressure naturally',
+#         'severity': 'safe',
+#         'nutrition': {
+#             'calories': 89,
+#             'protein': 1.1,
+#             'carbs': 23,
+#             'fiber': 2.6,
+#         }
+#     },
+#     {
+#         'food_item': 'Almonds',
+#         'emoji': '🌰',
+#         'description': 'Tree nuts packed with healthy unsaturated fats and protein.',
+#         'conditions': ['heart_disease', 'cholesterol'],
+#         'benefit': 'May help lower cholesterol and reduce heart disease risk',
+#         'severity': 'safe',
+#         'nutrition': {
+#             'calories': 579,
+#             'protein': 21.2,
+#             'carbs': 21.6,
+#             'fat': 49.9,
+#         },
+#         'allergens': ['tree_nuts']
+#     },
+#     {
+#         'food_item': 'Peanuts',
+#         'emoji': '🥜',
+#         'description': 'Good protein source with healthy fats, but caution for allergy sufferers.',
+#         'conditions': [],
+#         'benefit': 'Contains aflatoxins - avoid if you have peanut allergies',
+#         'severity': 'danger',
+#         'nutrition': {
+#             'calories': 567,
+#             'protein': 25.8,
+#             'carbs': 16.1,
+#             'fat': 49.2,
+#         },
+#         'allergens': ['peanuts']
+#     },
+#     {
+#         'food_item': 'Pizza',
+#         'emoji': '🍕',
+#         'description': 'High sodium and saturated fat content, not ideal for certain conditions.',
+#         'conditions': [],
+#         'benefit': 'Occasional consumption only - high sodium affects blood pressure',
+#         'severity': 'caution',
+#         'nutrition': {
+#             'calories': 285,
+#             'protein': 12,
+#             'carbs': 36,
+#             'fat': 10,
+#         },
+#         'avoid_for_conditions': ['hypertension', 'diabetes', 'heart_disease']
+#     },
+# ]
 
 class RecommendationEngine:
     @staticmethod
@@ -246,10 +246,14 @@ class RecommendationEngine:
 
         recent_foods = ', '.join([f.get('name', 'Unknown') for f in food_history.get('recent_foods', [])]) or 'No recent scans'
 
+        # Build list of conditions for the AI to reference
+        user_conditions_list = health_profile.get('conditions', [])
+        conditions_list_str = ', '.join(user_conditions_list) if user_conditions_list else 'No specific conditions'
+
         prompt = f"""You are a personalized nutrition advisor. Based on the user's health profile and eating history, generate 5 specific, actionable food recommendations.
 
 USER HEALTH PROFILE:
-- Conditions: {conditions_str}
+- Health Conditions: {conditions_str}
 - Allergens: {allergens_str}
 - Dietary Restrictions: {restrictions_str}
 
@@ -261,12 +265,14 @@ Return ONLY a valid JSON array with exactly 5 recommendation objects. Each objec
   "food_item": "food name",
   "emoji": "single emoji",
   "description": "why this food is good (1-2 sentences)",
-  "condition": "primary condition it addresses or 'general'",
+  "condition": "which health condition this addresses: {conditions_list_str}",
   "benefit": "specific health benefit (1 sentence)",
   "severity": "safe" (only safe foods),
   "nutritional_info": {{"calories": number, "protein": number, "carbs": number, "fiber": number}}
 }}
 
+IMPORTANT: The "condition" field MUST be one of the user's actual health conditions: {conditions_list_str}
+Do NOT use "general" - use the specific condition this food benefits.
 Be specific and personalized. Focus on foods that address their conditions and avoid allergens."""
 
         # Try Ollama Cloud first

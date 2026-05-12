@@ -74,7 +74,11 @@ class MedicalReportViewSet(viewsets.ModelViewSet):
             medical_report.extracted_data = {
                 'conditions': result['conditions'],
                 'allergens': result['allergens'],
-                'dietary_restrictions': result['dietary_restrictions']
+                'dietary_restrictions': result['dietary_restrictions'],
+                'is_mock': result.get('is_mock', False),
+                'extraction_method': result.get('extraction_method', 'unknown'),
+                'extracted_summary': result.get('extracted_summary'),  # AI summary if available
+                'raw_text_preview': result['raw_text'][:500] if result['raw_text'] else ''
             }
             medical_report.raw_text = result['raw_text']
             medical_report.status = 'completed'
