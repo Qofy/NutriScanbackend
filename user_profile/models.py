@@ -3,6 +3,7 @@ from django.contrib.auth.models import User
 
 class UserHealthProfile(models.Model):
     user = models.OneToOneField(User, on_delete=models.CASCADE, related_name='health_profile')
+    country = models.CharField(max_length=100, blank=True, null=True, help_text="User's country for regional food recommendations")
     age = models.IntegerField(null=True, blank=True)
     gender = models.CharField(max_length=20, choices=[
         ('male', 'Male'),

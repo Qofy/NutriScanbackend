@@ -129,8 +129,9 @@ class RecommendationViewSet(viewsets.ModelViewSet):
                 for item in analysis.recognized_items
             ] if food_analyses else []
 
-            # Fetch user's medical reports
+            # Fetch user's medical reports (PRIMARY source)
             medical_reports = MedicalReport.objects.filter(user=user, status='completed')
+            latest_medical_data = None  # Will use PRIMARY source for recommendations
 
             conditions = []
             allergens = []
@@ -139,6 +140,11 @@ class RecommendationViewSet(viewsets.ModelViewSet):
             for report in medical_reports:
                 # Use extracted_data from NLP
                 if report.extracted_data:
+                    # Store latest report's full extracted data as PRIMARY source
+                    if not latest_medical_data:
+                        latest_medical_data = report.extracted_data
+                        logger.info(f"✓ Using medical report {report.id} as PRIMARY source for recommendations")
+
                     for condition in report.extracted_data.get('conditions', []):
                         if isinstance(condition, dict):
                             conditions.append(condition.get('condition', condition))
@@ -158,6 +164,7 @@ class RecommendationViewSet(viewsets.ModelViewSet):
                             dietary_restrictions.append(restriction)
 
             # If no conditions from medical reports, try user profile settings
+            user_country = None
             if not conditions and user:
                 try:
                     from user_profile.models import UserHealthProfile
@@ -165,7 +172,16 @@ class RecommendationViewSet(viewsets.ModelViewSet):
                     conditions = profile.health_conditions or []
                     allergens.extend(profile.allergies or [])
                     dietary_restrictions.extend(profile.dietary_restrictions or [])
+                    user_country = profile.country
                     logger.info(f"✓ Got health profile from user settings")
+                except:
+                    pass
+            elif user:
+                # Get country from user profile even if conditions came from medical reports
+                try:
+                    from user_profile.models import UserHealthProfile
+                    profile = UserHealthProfile.objects.get(user=user)
+                    user_country = profile.country
                 except:
                     pass
 
@@ -180,10 +196,19 @@ class RecommendationViewSet(viewsets.ModelViewSet):
                 'recent_foods': recent_foods
             }
 
-            logger.info(f"🔍 Generating smart recommendations for user with profile: {health_profile}")
+            logger.info(f"🔍 Generating smart recommendations")
+            logger.info(f"  PRIMARY source: Medical report data" if latest_medical_data else "  PRIMARY source: User health profile")
+            logger.info(f"  SECONDARY source: Food scan history ({len(recent_foods)} foods)")
+            if user_country:
+                logger.info(f"  TERTIARY source: Country-based recommendations ({user_country})")
 
-            # Generate AI recommendations
-            ai_recommendations = RecommendationEngine.generate_ai_recommendations(health_profile, food_history)
+            # Generate AI recommendations with medical data as PRIMARY source
+            ai_recommendations = RecommendationEngine.generate_ai_recommendations(
+                health_profile,
+                food_history,
+                extracted_medical_data=latest_medical_data,
+                user_country=user_country
+            )
 
             # Save recommendations to database
             created_recommendations = []

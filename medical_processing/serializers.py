@@ -41,7 +41,8 @@ class MedicalReportListSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = MedicalReport
-        fields = ['id', 'document', 'uploaded_at', 'status']
+        fields = ['id', 'document', 'uploaded_at', 'status', 'extracted_data']
+        read_only_fields = ['extracted_data', 'status']
 
     def get_document(self, obj):
         request = self.context.get('request')

@@ -338,7 +338,83 @@ def get_nutritional_info(food_items):
 
     return nutrition_data
 
-def evaluate_safety(food_items, health_profile):
+def evaluate_food_safety_with_ollama(food_items, health_conditions, extracted_medical_data=None):
+    """Use Ollama to intelligently evaluate if foods are safe for user's specific health conditions"""
+    try:
+        api_key = getattr(settings, 'OLLAMA_API_KEY', None)
+        if not api_key or not api_key.strip():
+            logger.info('❌ Ollama API key not configured for food safety')
+            return None
+
+        food_names = [item['name'] for item in food_items]
+        conditions_str = ', '.join(health_conditions) if health_conditions else 'No specific conditions'
+
+        # Include extracted medical data in prompt if available
+        medical_context = ""
+        if extracted_medical_data:
+            if extracted_medical_data.get('extracted_summary'):
+                medical_context = f"\nExtracted Medical Report:\n{extracted_medical_data['extracted_summary'][:500]}"
+            elif extracted_medical_data.get('raw_text_preview'):
+                medical_context = f"\nMedical Report Preview:\n{extracted_medical_data['raw_text_preview'][:300]}"
+
+        prompt = f"""You are a nutritionist evaluating food safety. A patient with the following health conditions wants to eat these foods:
+
+Health Conditions: {conditions_str}
+{medical_context}
+
+Foods to evaluate: {', '.join(food_names)}
+
+For each food, determine if it is:
+- SAFE: Good for this health condition
+- CAUTION: May need to be limited or monitored
+- DANGER: Should be avoided
+
+Return ONLY a JSON object (no markdown, no other text) with this exact structure:
+{{
+    "overall_safety": "safe|caution|danger",
+    "recommendations": [
+        {{"food": "food_name", "safety": "safe|caution|danger", "reason": "brief explanation"}}
+    ],
+    "summary": "brief overall assessment"
+}}
+
+Be specific and considerate of the patient's actual medical situation."""
+
+        logger.info(f'🧠 Using Ollama to evaluate food safety for conditions: {conditions_str}')
+
+        url = 'https://ollama.com/api/chat'
+        headers = {
+            'Authorization': f'Bearer {api_key}',
+            'Content-Type': 'application/json'
+        }
+
+        payload = {
+            'model': 'ministral-3:8b',
+            'messages': [{'role': 'user', 'content': prompt}],
+            'stream': False,
+            'temperature': 0.3
+        }
+
+        response = requests.post(url, json=payload, headers=headers, timeout=15)
+        if response.status_code == 200:
+            data = response.json()
+            content = data.get('message', {}).get('content', '').strip()
+            try:
+                result = json.loads(content)
+                logger.info(f'✅ Ollama food safety evaluation: {result.get("overall_safety")}')
+                return result
+            except json.JSONDecodeError:
+                logger.warning('Failed to parse Ollama food safety response')
+                return None
+        else:
+            logger.warning(f'Ollama API error for food safety: {response.status_code}')
+            return None
+    except Exception as e:
+        logger.warning(f'Ollama food safety evaluation failed: {e}')
+        return None
+
+
+def evaluate_safety(food_items, health_profile, extracted_medical_data=None):
     """Evaluate food safety based on user health conditions and allergies"""
     if not food_items or not health_profile:
         return 'safe', 'No health profile to evaluate against'
@@ -350,6 +426,15 @@ def evaluate_safety(food_items, health_profile):
     # Early exit if no conditions or allergens
     if not conditions and not allergens:
         return 'safe', 'This food appears to be safe for your health profile'
+
+    # Try intelligent Ollama evaluation first (if medical data is available)
+    if extracted_medical_data:
+        ollama_result = evaluate_food_safety_with_ollama(food_items, conditions, extracted_medical_data)
+        if ollama_result:
+            overall = ollama_result.get('overall_safety', 'safe')
+            summary = ollama_result.get('summary', '')
+            logger.info(f'✓ Using Ollama evaluation: {overall}')
+            return overall, summary
 
     # Check for allergens in food names (substring matching)
     for allergen in allergens:

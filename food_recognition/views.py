@@ -70,7 +70,19 @@ class FoodAnalysisViewSet(viewsets.ModelViewSet):
                 except:
                     pass
 
-            safety_level, safety_reason = evaluate_safety(food_items, user_health_profile)
+            # Try to get extracted medical data from latest report
+            extracted_medical_data = None
+            if request.user and request.user.is_authenticated:
+                try:
+                    from medical_processing.models import MedicalReport
+                    latest_report = MedicalReport.objects.filter(user=request.user, status='completed').latest('uploaded_at')
+                    if latest_report:
+                        extracted_medical_data = latest_report.extracted_data
+                        logger.info(f"✓ Using extracted medical data from report: {latest_report.id}")
+                except:
+                    pass
+
+            safety_level, safety_reason = evaluate_safety(food_items, user_health_profile, extracted_medical_data)
             logger.info(f"🛡️ Safety level: {safety_level}")
 
             user = request.user if request.user.is_authenticated else None
@@ -178,7 +190,19 @@ class FoodAnalysisViewSet(viewsets.ModelViewSet):
             nutritional_info = get_nutritional_info(recognized_items)
             logger.info(f"✓ Got nutrition data")
 
-            safety_level, safety_reason = evaluate_safety(recognized_items, user_health_profile)
+            # Try to get extracted medical data from latest report
+            extracted_medical_data = None
+            if request.user and request.user.is_authenticated:
+                try:
+                    from medical_processing.models import MedicalReport
+                    latest_report = MedicalReport.objects.filter(user=request.user, status='completed').latest('uploaded_at')
+                    if latest_report:
+                        extracted_medical_data = latest_report.extracted_data
+                        logger.info(f"✓ Using extracted medical data from report: {latest_report.id}")
+                except:
+                    pass
+
+            safety_level, safety_reason = evaluate_safety(recognized_items, user_health_profile, extracted_medical_data)
             logger.info(f"🛡️ Safety level: {safety_level}")
 
             user = request.user if request.user.is_authenticated else None

@@ -14,7 +14,7 @@ class UserHealthProfileSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = UserHealthProfile
-        fields = ['id', 'user', 'age', 'gender', 'height', 'weight', 'bmi', 'activity_level',
+        fields = ['id', 'user', 'country', 'age', 'gender', 'height', 'weight', 'bmi', 'activity_level',
                   'dietary_preferences', 'allergies', 'health_conditions', 'dietary_restrictions',
                   'medications', 'goals', 'created_at', 'updated_at']
         read_only_fields = ['id', 'created_at', 'updated_at']

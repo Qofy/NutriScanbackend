@@ -226,11 +226,20 @@ class RecommendationEngine:
         return tips
 
     @staticmethod
-    def generate_ai_recommendations(health_profile, food_history):
+    def generate_ai_recommendations(health_profile, food_history, extracted_medical_data=None, user_country=None):
         """
         Generate personalized recommendations using AI (Ollama Cloud → Claude AI fallback)
+
+        PRIORITY:
+        1. extracted_medical_data (from medical report) - PRIMARY
+        2. food_history (from food scans) - SECONDARY
+        3. health_profile - fallback
+        4. user_country - for regional food suggestions
+
         health_profile: {conditions: [], allergens: [], dietary_restrictions: []}
         food_history: {recent_foods: [], nutritional_patterns: {}}
+        extracted_medical_data: {extracted_summary: str, raw_text_preview: str, ...}
+        user_country: str (e.g., "Kenya", "Nigeria", "India")
         """
         import json
         import requests
@@ -239,7 +248,7 @@ class RecommendationEngine:
 
         logger = logging.getLogger(__name__)
 
-        # Build the prompt
+        # Build the prompt with medical data as PRIMARY source
         conditions_str = ', '.join(health_profile.get('conditions', [])) or 'None'
         allergens_str = ', '.join(health_profile.get('allergens', [])) or 'None'
         restrictions_str = ', '.join(health_profile.get('dietary_restrictions', [])) or 'None'
@@ -250,17 +259,64 @@ class RecommendationEngine:
         user_conditions_list = health_profile.get('conditions', [])
         conditions_list_str = ', '.join(user_conditions_list) if user_conditions_list else 'No specific conditions'
 
-        prompt = f"""You are a personalized nutrition advisor. Based on the user's health profile and eating history, generate 5 specific, actionable food recommendations.
+        # Add medical report context if available (PRIMARY source)
+        medical_report_context = ""
+        if extracted_medical_data:
+            if extracted_medical_data.get('extracted_summary'):
+                medical_report_context = f"""
+MEDICAL REPORT (PRIMARY SOURCE - Extracted from actual medical document):
+{extracted_medical_data['extracted_summary'][:800]}"""
+            elif extracted_medical_data.get('raw_text_preview'):
+                medical_report_context = f"""
+MEDICAL REPORT (PRIMARY SOURCE - Extracted from actual medical document):
+{extracted_medical_data['raw_text_preview'][:800]}"""
 
-USER HEALTH PROFILE:
+        # Build country context if available
+        country_context = ""
+        if user_country and user_country.strip():
+            country_context = f"""
+
+=== USER LOCATION ===
+- Country: {user_country}
+- Generate 3 recommendations from {user_country}'s local/traditional cuisine
+- Generate 3 recommendations from continental/international cuisines"""
+        else:
+            country_context = """
+
+=== RECOMMENDATION SPLIT ===
+- Generate 3 recommendations from diverse global cuisines
+- Generate 3 recommendations from common international foods"""
+
+        # Adjust instruction based on whether country is provided
+        recommendations_count = 6
+        country_instruction = f"""
+3. Generate {recommendations_count} specific, actionable food recommendations split as follows:
+   - FIRST 3: {f'Local cuisine/traditional foods from {user_country}' if user_country else 'Diverse global cuisines'}
+   - NEXT 3: {'Continental/international cuisines' if user_country else 'Common international foods'}
+   - ALL recommendations must:
+     * Address their actual medical conditions from the report
+     * Avoid their documented allergens
+     * Support their dietary restrictions
+     * Consider their recent eating habits"""
+
+        prompt = f"""You are a personalized nutrition advisor. Based on the user's MEDICAL REPORT (primary), eating history (secondary), and location (tertiary), generate {recommendations_count} specific, actionable food recommendations.
+
+=== PRIMARY SOURCE: MEDICAL REPORT DATA ===
+{medical_report_context}
+
+=== SECONDARY SOURCE: RECENT FOOD SCANS ===
+Recently eaten foods: {recent_foods}
+
+=== USER HEALTH PROFILE ===
 - Health Conditions: {conditions_str}
 - Allergens: {allergens_str}
-- Dietary Restrictions: {restrictions_str}
+- Dietary Restrictions: {restrictions_str}{country_context}
 
-RECENT FOODS EATEN:
-{recent_foods}
+INSTRUCTIONS:
+1. PRIORITIZE recommendations based on the user's ACTUAL MEDICAL REPORT data
+2. SECONDARY: Consider their recent food eating patterns to provide relevant advice{country_instruction}
 
-Return ONLY a valid JSON array with exactly 5 recommendation objects. Each object must have:
+Return ONLY a valid JSON array with exactly {recommendations_count} recommendation objects. Each object must have:
 {{
   "food_item": "food name",
   "emoji": "single emoji",
@@ -271,9 +327,10 @@ Return ONLY a valid JSON array with exactly 5 recommendation objects. Each objec
   "nutritional_info": {{"calories": number, "protein": number, "carbs": number, "fiber": number}}
 }}
 
-IMPORTANT: The "condition" field MUST be one of the user's actual health conditions: {conditions_list_str}
+IMPORTANT: The "condition" field MUST be one of the user's actual health conditions from their medical report: {conditions_list_str}
 Do NOT use "general" - use the specific condition this food benefits.
-Be specific and personalized. Focus on foods that address their conditions and avoid allergens."""
+Be specific and personalized based on their ACTUAL MEDICAL DATA, not generic recommendations.
+Ensure the FIRST 3 recommendations are {f'from {user_country}' if user_country else 'from diverse regions'} and the NEXT 3 are from continental/international cuisines."""
 
         # Try Ollama Cloud first
         try:
