@@ -1,1 +1,1 @@
-web: gunicorn nutriscan.wsgi
+web: python manage.py migrate && gunicorn nutriscan.wsgi

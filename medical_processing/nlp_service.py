@@ -495,8 +495,10 @@ Keep your response concise and factual."""
             }
 
             response = requests.post(url, json=payload, headers=headers, timeout=30)
+            logger.info(f'📡 Ollama API response status: {response.status_code}')
             if response.status_code == 200:
                 data = response.json()
+                logger.info(f'📊 Ollama response data: {data.get("message", {})}')
                 content = data.get('message', {}).get('content', '').strip()
                 if content:
                     logger.info(f'✅ Ollama extraction successful: {len(content)} chars')
@@ -506,7 +508,7 @@ Keep your response concise and factual."""
                     logger.warning('⚠️  Ollama returned empty response')
                     return None
             else:
-                logger.warning(f'⚠️  Ollama API error: {response.status_code}')
+                logger.warning(f'⚠️  Ollama API error: {response.status_code} - {response.text}')
                 return None
         except Exception as e:
             logger.warning(f'⚠️  Ollama extraction failed: {e}')
@@ -649,10 +651,16 @@ Return ONLY a JSON object (no markdown, no other text) with this exact structure
         # Try AI summary on extracted text
         logger.info('🔍 Attempting AI summary of extracted text...')
         ai_summary = None
-        ai_result = MedicalDocumentProcessor.extract_with_ai(raw_text)
-        if ai_result and ai_result.get('summary'):
-            ai_summary = ai_result.get('summary')
-            logger.info(f'✅ AI summary created: {len(ai_summary)} characters')
+        try:
+            ai_result = MedicalDocumentProcessor.extract_with_ai(raw_text)
+            logger.info(f'📊 AI result: {ai_result}')
+            if ai_result and ai_result.get('summary'):
+                ai_summary = ai_result.get('summary')
+                logger.info(f'✅ AI summary created: {len(ai_summary)} characters')
+            else:
+                logger.warning(f'⚠️ No summary in AI result: {ai_result}')
+        except Exception as e:
+            logger.error(f'❌ Error generating AI summary: {e}')
 
         # Always do keyword matching as fallback/supplement
         logger.info('📚 Running keyword-based extraction...')
