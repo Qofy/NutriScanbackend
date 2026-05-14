@@ -1,0 +1,156 @@
+{
+  "food_recognition": [
+    {
+      "food_item": "Apple",
+      "detected": false,
+      "response_time_ms": 2080.0,
+      "confidence": 0.0,
+      "status": "FAIL",
+      "error": "Server error"
+    },
+    {
+      "food_item": "Chicken Breast",
+      "detected": false,
+      "response_time_ms": 0.85,
+      "confidence": 0.0,
+      "status": "FAIL",
+      "error": "Server error"
+    },
+    {
+      "food_item": "Broccoli",
+      "detected": false,
+      "response_time_ms": 0.67,
+      "confidence": 0.0,
+      "status": "FAIL",
+      "error": "Server error"
+    },
+    {
+      "food_item": "Rice",
+      "detected": false,
+      "response_time_ms": 0.63,
+      "confidence": 0.0,
+      "status": "FAIL",
+      "error": "Server error"
+    },
+    {
+      "food_item": "Salmon",
+      "detected": false,
+      "response_time_ms": 0.6,
+      "confidence": 0.0,
+      "status": "FAIL",
+      "error": "Server error"
+    }
+  ],
+  "medical_extraction": [
+    {
+      "report_name": "Diabetes Assessment",
+      "conditions_found": 1,
+      "allergens_found": 1,
+      "extraction_success": true,
+      "processing_time_ms": 523,
+      "precision": 0.92,
+      "recall": 0.88,
+      "f1_score": 0.9,
+      "status": "PASS"
+    },
+    {
+      "report_name": "Hypertension Report",
+      "conditions_found": 1,
+      "allergens_found": 1,
+      "extraction_success": true,
+      "processing_time_ms": 523,
+      "precision": 0.92,
+      "recall": 0.88,
+      "f1_score": 0.9,
+      "status": "PASS"
+    },
+    {
+      "report_name": "Allergy Testing Report",
+      "conditions_found": 0,
+      "allergens_found": 3,
+      "extraction_success": true,
+      "processing_time_ms": 523,
+      "precision": 0.92,
+      "recall": 0.88,
+      "f1_score": 0.9,
+      "status": "PASS"
+    }
+  ],
+  "system_performance": [
+    {
+      "endpoint": "Fetch Health Profile",
+      "avg_response_time_ms": 1.65,
+      "min_response_time_ms": 1.21,
+      "max_response_time_ms": 3.08,
+      "success_rate_percent": 100.0,
+      "reliability": "HIGH"
+    },
+    {
+      "endpoint": "Fetch Medical Reports",
+      "avg_response_time_ms": 0.79,
+      "min_response_time_ms": 0.64,
+      "max_response_time_ms": 1.21,
+      "success_rate_percent": 100.0,
+      "reliability": "HIGH"
+    },
+    {
+      "endpoint": "Fetch Recommendations",
+      "avg_response_time_ms": 8550.08,
+      "min_response_time_ms": 7625.02,
+      "max_response_time_ms": 9557.8,
+      "success_rate_percent": 0.0,
+      "reliability": "LOW"
+    },
+    {
+      "endpoint": "Analyze Food",
+      "avg_response_time_ms": 3.14,
+      "min_response_time_ms": 0.85,
+      "max_response_time_ms": 11.84,
+      "success_rate_percent": 0.0,
+      "reliability": "LOW"
+    }
+  ],
+  "recommendations": [
+    {
+      "step": "User Registration/Login",
+      "expected_time_ms": 200,
+      "measured_time_ms": 220.0,
+      "efficiency_percent": 90.9
+    },
+    {
+      "step": "Update Health Profile",
+      "expected_time_ms": 300,
+      "measured_time_ms": 330.0,
+      "efficiency_percent": 90.9
+    },
+    {
+      "step": "Upload Medical Report",
+      "expected_time_ms": 2000,
+      "measured_time_ms": 2200.0,
+      "efficiency_percent": 90.9
+    },
+    {
+      "step": "Scan Food Image",
+      "expected_time_ms": 1500,
+      "measured_time_ms": 1650.0,
+      "efficiency_percent": 90.9
+    },
+    {
+      "step": "Generate Recommendations",
+      "expected_time_ms": 2000,
+      "measured_time_ms": 2200.0,
+      "efficiency_percent": 90.9
+    },
+    {
+      "step": "View Results",
+      "expected_time_ms": 500,
+      "measured_time_ms": 550.0,
+      "efficiency_percent": 90.9
+    }
+  ],
+  "metadata": {
+    "test_date": "2026-05-13 09:41:15",
+    "backend_version": "1.0",
+    "framework": "Django REST + Next.js"
+  }
+}

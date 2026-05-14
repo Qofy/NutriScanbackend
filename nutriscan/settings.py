@@ -19,6 +19,8 @@ INSTALLED_APPS = [
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
+    'cloudinary_storage',
+    'cloudinary',
     'rest_framework',
     'rest_framework.authtoken',
     'corsheaders',
@@ -133,3 +135,23 @@ if not all(FIREBASE_CONFIG.values()):
 USDA_API_KEY = os.getenv('USDA_API_KEY', '')
 ANTHROPIC_API_KEY = os.getenv('ANTHROPIC_API_KEY', '')
 OLLAMA_API_KEY = os.getenv('OLLAMA_API_KEY', '')
+
+# Cloudinary Configuration for file storage
+import cloudinary
+import cloudinary.api
+
+cloudinary.config(
+    cloud_name=os.getenv('CLOUDINARY_CLOUD_NAME'),
+    api_key=os.getenv('CLOUDINARY_API_KEY'),
+    api_secret=os.getenv('CLOUDINARY_API_SECRET')
+)
+
+# Use Cloudinary for media storage (images, PDFs, etc.)
+if os.getenv('CLOUDINARY_CLOUD_NAME'):
+    DEFAULT_FILE_STORAGE = 'cloudinary_storage.storage.MediaCloudinaryStorage'
+    MEDIA_URL = '/media/'
+    # Don't set MEDIA_ROOT when using Cloudinary
+else:
+    # Fallback to local storage if Cloudinary not configured
+    MEDIA_URL = '/media/'
+    MEDIA_ROOT = BASE_DIR / 'media'
