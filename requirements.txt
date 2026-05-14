@@ -71,3 +71,4 @@ ultralytics==8.4.48
 ultralytics-thop==2.0.19
 urllib3==2.6.3
 wheel==0.47.0
+dj-database-url==2.1.0
