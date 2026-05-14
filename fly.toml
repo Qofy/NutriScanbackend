@@ -3,8 +3,7 @@ app = "nutriscan-api"
 primary_region = "iad"
 
 [build]
-  builder = "paas"
-  buildpacks = ["python"]
+  dockerfile = "Dockerfile"
 
 [env]
   PORT = "8080"
