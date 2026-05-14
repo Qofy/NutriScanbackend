@@ -23,5 +23,5 @@ RUN python manage.py collectstatic --noinput || true
 # Expose port
 EXPOSE 8080
 
-# Run migrations and start gunicorn
-CMD ["sh", "-c", "python manage.py migrate && gunicorn nutriscan.wsgi:application --bind 0.0.0.0:8080 --workers 2 --timeout 60"]
+# Start gunicorn (migrations run in release phase via fly.toml)
+CMD ["gunicorn", "nutriscan.wsgi:application", "--bind", "0.0.0.0:8080", "--workers", "2", "--timeout", "60"]
