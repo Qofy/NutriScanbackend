@@ -157,3 +157,4 @@ else:
     # Fallback to local storage if Cloudinary not configured
     MEDIA_URL = '/media/'
     MEDIA_ROOT = BASE_DIR / 'media'
+# Fresh rebuild
