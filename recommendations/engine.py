@@ -358,13 +358,27 @@ Ensure the FIRST 3 recommendations are {f'from {user_country}' if user_country e
                     response_text = data.get('message', {}).get('content', '').strip()
                     logger.info(f"📊 Ollama response received: {len(response_text)} chars")
 
-                    # Clean up markdown if needed
+                    # Clean up markdown if needed - handle various formats
                     if response_text.startswith('```'):
-                        response_text = response_text.split('```')[1]
-                        if response_text.startswith('json'):
-                            response_text = response_text[4:]
+                        parts = response_text.split('```')
+                        if len(parts) >= 3:
+                            response_text = parts[1]
+                        elif len(parts) == 2:
+                            response_text = parts[1]
+                        else:
+                            response_text = parts[0]
 
-                    recs = json.loads(response_text)
+                    # Remove 'json' language identifier if present
+                    if response_text.startswith('json'):
+                        response_text = response_text[4:].strip()
+
+                    # Try to parse as JSON
+                    try:
+                        recs = json.loads(response_text)
+                    except json.JSONDecodeError:
+                        logger.error(f"Failed to parse Ollama response as JSON: {response_text[:100]}")
+                        raise Exception(f"Invalid JSON from Ollama: {response_text[:200]}")
+
                     logger.info("✅ Generated recommendations via Ollama Cloud (with nutritional info & safety)")
                     return recs
                 else:
