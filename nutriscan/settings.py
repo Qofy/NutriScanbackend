@@ -90,7 +90,8 @@ CORS_ALLOWED_ORIGINS = [
     'http://localhost:8000',
     'http://127.0.0.1:3000',
     'http://127.0.0.1:8000',
-    'https://nutriscan-lime.vercel.app',
+    'https://nutri-scan-murex.vercel.app',
+    'https://nutri-scan-git-main-safo-kofi-agyekums-projects.vercel.app',
 ]
 
 CORS_ALLOW_CREDENTIALS = True
