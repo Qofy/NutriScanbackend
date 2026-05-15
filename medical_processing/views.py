@@ -45,6 +45,24 @@ class MedicalReportViewSet(viewsets.ModelViewSet):
         try:
             result = MedicalDocumentProcessor.process_medical_document(document)
 
+            # Clean up temp files to save storage
+            try:
+                import os
+                import tempfile
+                temp_dir = tempfile.gettempdir()
+                # Delete old temp files (older than 1 hour)
+                import time
+                current_time = time.time()
+                for filename in os.listdir(temp_dir):
+                    filepath = os.path.join(temp_dir, filename)
+                    if os.path.isfile(filepath) and (current_time - os.path.getmtime(filepath)) > 3600:
+                        try:
+                            os.remove(filepath)
+                        except:
+                            pass
+            except Exception as cleanup_error:
+                logger.warning(f"⚠️ Temp file cleanup failed: {cleanup_error}")
+
             for condition in result['conditions']:
                 ExtractedHealthInfo.objects.create(
                     report=medical_report,
