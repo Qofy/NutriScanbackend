@@ -332,11 +332,11 @@ Do NOT use "general" - use the specific condition this food benefits.
 Be specific and personalized based on their ACTUAL MEDICAL DATA, not generic recommendations.
 Ensure the FIRST 3 recommendations are {f'from {user_country}' if user_country else 'from diverse regions'} and the NEXT 3 are from continental/international cuisines."""
 
-        # Try Ollama Cloud first
+        # Try Ollama Cloud for recommendations (prioritized)
         try:
             ollama_key = getattr(settings, 'OLLAMA_API_KEY', None)
             if ollama_key and ollama_key.strip():
-                logger.info("🔍 Trying Ollama Cloud for recommendations...")
+                logger.info("🔍 Using Ollama Cloud for recommendations (nutritional info, safety, cautions)...")
 
                 response = requests.post(
                     'https://ollama.com/api/chat',
@@ -350,12 +350,13 @@ Ensure the FIRST 3 recommendations are {f'from {user_country}' if user_country e
                         'stream': False,
                         'temperature': 0.5
                     },
-                    timeout=10
+                    timeout=60
                 )
 
                 if response.status_code == 200:
                     data = response.json()
                     response_text = data.get('message', {}).get('content', '').strip()
+                    logger.info(f"📊 Ollama response received: {len(response_text)} chars")
 
                     # Clean up markdown if needed
                     if response_text.startswith('```'):
@@ -364,37 +365,17 @@ Ensure the FIRST 3 recommendations are {f'from {user_country}' if user_country e
                             response_text = response_text[4:]
 
                     recs = json.loads(response_text)
-                    logger.info("✅ Generated recommendations via Ollama Cloud")
+                    logger.info("✅ Generated recommendations via Ollama Cloud (with nutritional info & safety)")
                     return recs
                 else:
-                    logger.warning(f"Ollama Cloud returned {response.status_code}, trying Claude AI...")
+                    logger.error(f"Ollama API returned {response.status_code}: {response.text}")
+                    raise Exception(f"Ollama API error: {response.status_code}")
+            else:
+                logger.warning("⚠️ OLLAMA_API_KEY not configured")
+                raise Exception("Ollama API key not configured")
         except Exception as e:
-            logger.warning(f"Ollama Cloud failed: {str(e)}, trying Claude AI...")
+            logger.error(f"Ollama Cloud failed: {str(e)}")
 
-        # Fallback to Claude AI
-        try:
-            from anthropic import Anthropic
-
-            logger.info("🔍 Trying Claude AI for recommendations...")
-            client = Anthropic()
-
-            response = client.messages.create(
-                model="claude-opus-4-1",
-                max_tokens=1500,
-                messages=[{"role": "user", "content": prompt}]
-            )
-
-            response_text = response.content[0].text.strip()
-
-            # Clean up markdown if needed
-            if response_text.startswith('```'):
-                response_text = response_text.split('```')[1]
-                if response_text.startswith('json'):
-                    response_text = response_text[4:]
-
-            recs = json.loads(response_text)
-            logger.info("✅ Generated recommendations via Claude AI")
-            return recs
-        except Exception as e:
-            logger.error(f"Claude AI failed: {str(e)}")
-            raise Exception(f"Failed to generate recommendations: {str(e)}")
+        # Ollama is required - no fallback
+        logger.error("❌ Recommendations require Ollama API key to be configured")
+        raise Exception("Failed to generate recommendations: OLLAMA_API_KEY not configured. Please set OLLAMA_API_KEY in environment variables.")
