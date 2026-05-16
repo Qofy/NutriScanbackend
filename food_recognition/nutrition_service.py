@@ -415,65 +415,60 @@ Be specific and considerate of the patient's actual medical situation."""
 
 
 def evaluate_safety(food_items, health_profile, extracted_medical_data=None):
-    """Evaluate food safety using Ollama AI based on user health conditions and allergies"""
-    if not food_items or not health_profile:
-        return 'safe', 'No health profile to evaluate against'
+    """
+    Evaluate food safety using Ollama AI with priority:
+    1. PRIMARY: Medical Report extracted data (if available)
+    2. SECONDARY: User health profile (conditions/allergens)
+    3. FALLBACK: Safe (no health data available)
+    """
+    if not food_items:
+        return 'safe', 'No food items to evaluate'
 
-    food_names = [item['name'].lower().strip() for item in food_items]
-    conditions = [c.lower().strip() for c in health_profile.get('conditions', [])] if health_profile.get('conditions') else []
-    allergens = [a.lower().strip() for a in health_profile.get('allergens', [])] if health_profile.get('allergens') else []
+    # PRIORITY 1: Use extracted medical data if available (PRIMARY source)
+    if extracted_medical_data:
+        logger.info('🏥 PRIMARY SOURCE: Using extracted medical report data for safety evaluation')
+        medical_conditions = extracted_medical_data.get('conditions', [])
+        medical_allergens = extracted_medical_data.get('allergens', [])
 
-    # Early exit if no conditions or allergens
-    if not conditions and not allergens:
-        return 'safe', 'This food appears to be safe for your health profile'
+        # Extract condition names from medical data structure
+        conditions = []
+        for item in medical_conditions:
+            if isinstance(item, dict):
+                conditions.append(item.get('condition', ''))
+            else:
+                conditions.append(str(item))
+        conditions = [c.lower().strip() for c in conditions if c]
 
-    # Always use Ollama for intelligent safety evaluation (PRIMARY method)
-    # This considers health conditions, allergies, and medical data together
-    ollama_result = evaluate_food_safety_with_ollama(food_items, conditions + allergens, extracted_medical_data)
-    if ollama_result:
-        overall = ollama_result.get('overall_safety', 'safe')
-        summary = ollama_result.get('summary', '')
-        logger.info(f'✅ Using Ollama AI evaluation: {overall}')
-        return overall, summary
+        allergens = []
+        for item in medical_allergens:
+            if isinstance(item, dict):
+                allergens.append(item.get('allergen', ''))
+            else:
+                allergens.append(str(item))
+        allergens = [a.lower().strip() for a in allergens if a]
 
-    # Check for allergens in food names (substring matching)
-    for allergen in allergens:
-        # Extract base allergen name (e.g., "peanut allergy" -> "peanut")
-        allergen_base = allergen.replace('allergy', '').replace('allergic', '').replace('allergies', '').replace('allergy to', '').strip()
-        if not allergen_base or allergen_base == 'food':
-            allergen_base = allergen
+        if conditions or allergens:
+            ollama_result = evaluate_food_safety_with_ollama(food_items, conditions + allergens, extracted_medical_data)
+            if ollama_result:
+                overall = ollama_result.get('overall_safety', 'safe')
+                summary = ollama_result.get('summary', '')
+                logger.info(f'✅ MEDICAL REPORT evaluation via Ollama: {overall}')
+                return overall, summary
 
-        # Check if allergen matches food (with some flexibility)
-        for food in food_names:
-            if allergen_base in food or food in allergen_base:
-                return 'danger', f'⚠️ This food contains {allergen} which you are allergic to'
+    # PRIORITY 2: Fall back to user health profile (SECONDARY source)
+    if health_profile:
+        conditions = [c.lower().strip() for c in health_profile.get('conditions', [])] if health_profile.get('conditions') else []
+        allergens = [a.lower().strip() for a in health_profile.get('allergens', [])] if health_profile.get('allergens') else []
 
-    # Check for restricted foods based on health conditions
-    restricted_foods = []
-    matched_conditions = []
+        if conditions or allergens:
+            logger.info('👤 SECONDARY SOURCE: Using user health profile for safety evaluation')
+            ollama_result = evaluate_food_safety_with_ollama(food_items, conditions + allergens, None)
+            if ollama_result:
+                overall = ollama_result.get('overall_safety', 'safe')
+                summary = ollama_result.get('summary', '')
+                logger.info(f'✅ USER PROFILE evaluation via Ollama: {overall}')
+                return overall, summary
 
-    for condition in conditions:
-        # Skip empty conditions
-        if not condition:
-            continue
-
-        # Get food restrictions from AI (Ollama → Claude)
-        restrictions = get_food_restrictions(condition)
-        if restrictions:
-            avoid_foods = restrictions.get('avoid', [])
-            restricted_foods.extend(avoid_foods)
-            matched_conditions.append(condition)
-            logger.info(f"✓ Got restrictions from AI for condition '{condition}': {len(avoid_foods)} foods to avoid")
-        else:
-            logger.info(f"⚠️ Could not get restrictions for condition '{condition}'")
-
-    # Check if any food is in restricted list
-    for food in food_names:
-        for restricted in restricted_foods:
-            restricted_lower = restricted.lower().strip()
-            if food == restricted_lower or restricted_lower in food or food in restricted_lower:
-                conditions_str = ', '.join(matched_conditions) if matched_conditions else ', '.join(conditions)
-                logger.info(f"🛑 Food '{food}' is restricted for {conditions_str}")
-                return 'caution', f'This food is not recommended for your health profile ({conditions_str})'
-
-    return 'safe', 'This food appears to be safe for your health profile'
+    # PRIORITY 3: No health data available - return safe
+    logger.info('⚠️ No medical report or user profile data available - defaulting to safe')
+    return 'safe', 'No health profile or medical data available - food appears generally safe'
