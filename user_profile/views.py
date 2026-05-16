@@ -138,15 +138,10 @@ class CurrentUserViewSet(viewsets.ViewSet):
             return Response({'error': 'Invalid credentials'}, status=status.HTTP_401_UNAUTHORIZED)
 
         token, created = Token.objects.get_or_create(user=user)
+        serializer = UserSerializer(user)
         return Response({
             'token': token.key,
-            'user': {
-                'id': user.id,
-                'username': user.username,
-                'email': user.email,
-                'first_name': user.first_name,
-                'last_name': user.last_name,
-            }
+            'user': serializer.data
         }, status=status.HTTP_200_OK)
 
     @action(detail=False, methods=['post'], permission_classes=[AllowAny])
@@ -177,16 +172,14 @@ class CurrentUserViewSet(viewsets.ViewSet):
             last_name=last_name,
         )
 
+        # Create health profile for new user
+        UserHealthProfile.objects.get_or_create(user=user)
+
         token, created = Token.objects.get_or_create(user=user)
+        serializer = UserSerializer(user)
         return Response({
             'token': token.key,
-            'user': {
-                'id': user.id,
-                'username': user.username,
-                'email': user.email,
-                'first_name': user.first_name,
-                'last_name': user.last_name,
-            }
+            'user': serializer.data
         }, status=status.HTTP_201_CREATED)
 
     permission_classes = [AllowAny]
