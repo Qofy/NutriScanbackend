@@ -415,7 +415,7 @@ Be specific and considerate of the patient's actual medical situation."""
 
 
 def evaluate_safety(food_items, health_profile, extracted_medical_data=None):
-    """Evaluate food safety based on user health conditions and allergies"""
+    """Evaluate food safety using Ollama AI based on user health conditions and allergies"""
     if not food_items or not health_profile:
         return 'safe', 'No health profile to evaluate against'
 
@@ -427,14 +427,14 @@ def evaluate_safety(food_items, health_profile, extracted_medical_data=None):
     if not conditions and not allergens:
         return 'safe', 'This food appears to be safe for your health profile'
 
-    # Try intelligent Ollama evaluation first (if medical data is available)
-    if extracted_medical_data:
-        ollama_result = evaluate_food_safety_with_ollama(food_items, conditions, extracted_medical_data)
-        if ollama_result:
-            overall = ollama_result.get('overall_safety', 'safe')
-            summary = ollama_result.get('summary', '')
-            logger.info(f'✓ Using Ollama evaluation: {overall}')
-            return overall, summary
+    # Always use Ollama for intelligent safety evaluation (PRIMARY method)
+    # This considers health conditions, allergies, and medical data together
+    ollama_result = evaluate_food_safety_with_ollama(food_items, conditions + allergens, extracted_medical_data)
+    if ollama_result:
+        overall = ollama_result.get('overall_safety', 'safe')
+        summary = ollama_result.get('summary', '')
+        logger.info(f'✅ Using Ollama AI evaluation: {overall}')
+        return overall, summary
 
     # Check for allergens in food names (substring matching)
     for allergen in allergens:
