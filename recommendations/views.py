@@ -218,8 +218,11 @@ class RecommendationViewSet(viewsets.ModelViewSet):
 
                 # Validate that condition is one of user's actual conditions
                 # If not, use the first user condition as fallback
-                if rec_condition.lower() not in [c.lower() for c in health_profile.get('conditions', [])]:
-                    rec_condition = health_profile.get('conditions', ['general'])[0]
+                user_conditions = health_profile.get('conditions', [])
+                if user_conditions and rec_condition.lower() not in [c.lower() for c in user_conditions]:
+                    rec_condition = user_conditions[0]
+                elif not user_conditions:
+                    rec_condition = 'general'
 
                 recommendation_obj = Recommendation.objects.create(
                     user=user,
