@@ -399,15 +399,18 @@ Be specific and considerate of the patient's actual medical situation."""
         if response.status_code == 200:
             data = response.json()
             content = data.get('message', {}).get('content', '').strip()
+            logger.info(f'📨 Ollama raw response: {content[:200]}')
             try:
                 result = json.loads(content)
                 logger.info(f'✅ Ollama food safety evaluation: {result.get("overall_safety")}')
                 return result
-            except json.JSONDecodeError:
-                logger.warning('Failed to parse Ollama food safety response')
+            except json.JSONDecodeError as e:
+                logger.error(f'❌ Failed to parse Ollama response as JSON: {str(e)}')
+                logger.error(f'Raw content: {content}')
                 return None
         else:
-            logger.warning(f'Ollama API error for food safety: {response.status_code}')
+            logger.error(f'❌ Ollama API error for food safety: {response.status_code}')
+            logger.error(f'Response: {response.text[:500]}')
             return None
     except Exception as e:
         logger.warning(f'Ollama food safety evaluation failed: {e}')
