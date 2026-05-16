@@ -402,21 +402,24 @@ Be specific and considerate of the patient's actual medical situation."""
             logger.info(f'📨 Ollama raw response (first 200 chars): {content[:200]}')
 
             # Clean up markdown/formatting if present
-            if content.startswith('```'):
+            if '```' in content:
                 # Remove markdown code block
-                content = content.split('```')[1]
+                parts = content.split('```')
+                content = parts[1] if len(parts) > 1 else content
                 if content.startswith('json'):
                     content = content[4:]
                 content = content.strip()
 
-            # Try to find JSON in response
-            if not content.startswith('{'):
-                # Try to extract JSON from text
-                start = content.find('{')
-                if start != -1:
-                    end = content.rfind('}') + 1
-                    if end > start:
-                        content = content[start:end]
+            # Extract JSON from response
+            # Find the first { and last } to get clean JSON
+            start = content.find('{')
+            end = content.rfind('}')
+
+            if start != -1 and end != -1 and end > start:
+                content = content[start:end+1]
+
+            content = content.strip()
+            logger.info(f'🔍 Extracted JSON (first 100 chars): {content[:100]}')
 
             try:
                 result = json.loads(content)
@@ -425,8 +428,16 @@ Be specific and considerate of the patient's actual medical situation."""
                 return result
             except json.JSONDecodeError as e:
                 logger.error(f'❌ Failed to parse Ollama response as JSON: {str(e)}')
-                logger.error(f'Cleaned content: {content[:500]}')
-                return None
+                logger.error(f'Content: {content[:300]}')
+                # Try one more time - remove any leading/trailing whitespace or special chars
+                content_clean = ''.join(c for c in content if c.isprintable() or c in '{}[],":\n')
+                try:
+                    result = json.loads(content_clean)
+                    logger.info(f'✅ Ollama (cleaned): {result.get("overall_safety")}')
+                    return result
+                except:
+                    logger.error('Final parse attempt failed')
+                    return None
         else:
             logger.error(f'❌ Ollama API error for food safety: {response.status_code}')
             logger.error(f'Response: {response.text[:500]}')
