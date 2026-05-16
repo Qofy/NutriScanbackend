@@ -3,10 +3,18 @@ from django.contrib.auth.models import User
 from .models import UserHealthProfile, DailyTracking, SavedFood
 
 class UserSerializer(serializers.ModelSerializer):
+    role = serializers.SerializerMethodField()
+
     class Meta:
         model = User
-        fields = ['id', 'username', 'email', 'first_name', 'last_name']
+        fields = ['id', 'username', 'email', 'first_name', 'last_name', 'role']
         read_only_fields = ['id']
+
+    def get_role(self, obj):
+        try:
+            return obj.health_profile.role
+        except (AttributeError, UserHealthProfile.DoesNotExist):
+            return 'user'
 
 class UserHealthProfileSerializer(serializers.ModelSerializer):
     bmi = serializers.SerializerMethodField()

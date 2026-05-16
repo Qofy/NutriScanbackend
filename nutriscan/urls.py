@@ -14,6 +14,7 @@ urlpatterns = [
     path('api/medical/', include('medical_processing.urls')),
     path('api/recommendations/', include('recommendations.urls')),
     path('api/profile/', include('user_profile.urls')),
+    path('api/admin/', include('user_profile.admin_urls')),
 ]
 
 if settings.DEBUG:
