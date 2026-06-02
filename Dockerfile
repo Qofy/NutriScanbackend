@@ -21,5 +21,5 @@ RUN pip install --no-cache-dir -r requirements.txt
 # Copy project
 COPY . .
 
-# Just start gunicorn - migrations handled separately
-CMD exec gunicorn nutriscan.wsgi --bind 0.0.0.0:${PORT:-8000} --workers 1 --timeout 300 --keep-alive 75 --access-logfile - --error-logfile -
+# Start gunicorn with verbose error output
+CMD sh -c "echo 'Starting gunicorn...' && exec gunicorn nutriscan.wsgi --bind 0.0.0.0:\${PORT:-8000} --workers 1 --timeout 300 --keep-alive 75 --access-logfile - --error-logfile - || (echo 'GUNICORN FAILED'; sleep 30)"
