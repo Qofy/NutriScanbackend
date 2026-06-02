@@ -15,13 +15,17 @@ class YOLOFoodDetector:
     def __init__(self, model_path='yolov8n.pt'):
         self.model = None
         if YOLO is None:
-            print("YOLO not installed. Using mock detection.")
+            print("❌ YOLO not installed. Using mock detection.")
             return
 
         try:
+            print(f"🚀 Loading YOLO model: {model_path}")
             self.model = YOLO(model_path)
+            print(f"✅ YOLO model loaded successfully")
         except Exception as e:
-            print(f"YOLO model loading error: {e}. Using mock detection.")
+            print(f"❌ YOLO model loading error: {e}. Using mock detection.")
+            import traceback
+            traceback.print_exc()
             self.model = None
 
     def detect_food(self, image_file):
