@@ -27,4 +27,8 @@ RUN pip install --no-cache-dir -r requirements.txt
 COPY . .
 
 # Run migrations and start server
-CMD python manage.py migrate && gunicorn nutriscan.wsgi --bind 0.0.0.0:${PORT:-8000} --workers 1 --timeout 300 --keep-alive 75
+CMD set -e && \
+    echo "🚀 Running migrations..." && \
+    python manage.py migrate && \
+    echo "✅ Migrations complete. Starting gunicorn..." && \
+    gunicorn nutriscan.wsgi --bind 0.0.0.0:${PORT:-8000} --workers 1 --timeout 300 --keep-alive 75 --access-logfile - --error-logfile -
