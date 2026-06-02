@@ -21,27 +21,5 @@ RUN pip install --no-cache-dir -r requirements.txt
 # Copy project
 COPY . .
 
-# Create a simple Python startup script
-RUN cat > /app/run.py << 'EOF'
-import os
-import sys
-import subprocess
-
-port = os.getenv("PORT", "8000")
-print(f"🚀 Starting gunicorn on port {port}...")
-sys.stdout.flush()
-
-os.execvp("gunicorn", [
-    "gunicorn",
-    "nutriscan.wsgi",
-    "--bind", f"0.0.0.0:{port}",
-    "--workers", "1",
-    "--timeout", "300",
-    "--keep-alive", "75",
-    "--access-logfile", "-",
-    "--error-logfile", "-"
-])
-EOF
-
-# Start using Python script
-CMD ["python", "/app/run.py"]
+# Start gunicorn - migrations happen during import, that's normal
+CMD ["gunicorn", "nutriscan.wsgi", "--bind=0.0.0.0:8000", "--workers=1", "--timeout=300", "--keep-alive=75", "--access-logfile=-", "--error-logfile=-"]
