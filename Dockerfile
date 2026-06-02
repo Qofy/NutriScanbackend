@@ -21,5 +21,27 @@ RUN pip install --no-cache-dir -r requirements.txt
 # Copy project
 COPY . .
 
-# Start gunicorn with verbose error output
-CMD sh -c "echo 'Starting gunicorn...' && exec gunicorn nutriscan.wsgi --bind 0.0.0.0:\${PORT:-8000} --workers 1 --timeout 300 --keep-alive 75 --access-logfile - --error-logfile - || (echo 'GUNICORN FAILED'; sleep 30)"
+# Create a simple Python startup script
+RUN cat > /app/run.py << 'EOF'
+import os
+import sys
+import subprocess
+
+port = os.getenv("PORT", "8000")
+print(f"🚀 Starting gunicorn on port {port}...")
+sys.stdout.flush()
+
+os.execvp("gunicorn", [
+    "gunicorn",
+    "nutriscan.wsgi",
+    "--bind", f"0.0.0.0:{port}",
+    "--workers", "1",
+    "--timeout", "300",
+    "--keep-alive", "75",
+    "--access-logfile", "-",
+    "--error-logfile", "-"
+])
+EOF
+
+# Start using Python script
+CMD ["python", "/app/run.py"]
