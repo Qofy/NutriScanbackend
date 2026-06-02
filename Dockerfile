@@ -1,6 +1,9 @@
 FROM python:3.13-slim
 
-# Install system dependencies including libGL for OpenCV
+# Install system dependencies
+# - libgl1, libglib2.0-0, libsm6, libxext6, libxrender-dev: OpenCV/YOLO dependencies
+# - poppler-utils: PDF processing
+# - libpq5, libpq-dev: PostgreSQL client libraries (for psycopg)
 RUN apt-get update && apt-get install -y \
     libgl1 \
     libglib2.0-0 \
@@ -8,6 +11,8 @@ RUN apt-get update && apt-get install -y \
     libxext6 \
     libxrender-dev \
     poppler-utils \
+    libpq5 \
+    libpq-dev \
     && rm -rf /var/lib/apt/lists/*
 
 WORKDIR /app
