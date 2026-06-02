@@ -1,11 +1,17 @@
 try:
     from ultralytics import YOLO
-except ImportError:
+    print("✅ ultralytics imported successfully")
+except Exception as e:
+    print(f"❌ Failed to import ultralytics: {e}")
+    import traceback
+    traceback.print_exc()
     YOLO = None
 
 try:
     from PIL import Image
-except ImportError:
+    print("✅ PIL imported successfully")
+except Exception as e:
+    print(f"❌ Failed to import PIL: {e}")
     Image = None
 
 import io
