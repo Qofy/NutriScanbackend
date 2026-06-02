@@ -3,7 +3,7 @@
     {
       "food_item": "Apple",
       "detected": false,
-      "response_time_ms": 2080.0,
+      "response_time_ms": 2183.89,
       "confidence": 0.0,
       "status": "FAIL",
       "error": "Server error"
@@ -11,7 +11,7 @@
     {
       "food_item": "Chicken Breast",
       "detected": false,
-      "response_time_ms": 0.85,
+      "response_time_ms": 3.68,
       "confidence": 0.0,
       "status": "FAIL",
       "error": "Server error"
@@ -19,7 +19,7 @@
     {
       "food_item": "Broccoli",
       "detected": false,
-      "response_time_ms": 0.67,
+      "response_time_ms": 3.44,
       "confidence": 0.0,
       "status": "FAIL",
       "error": "Server error"
@@ -27,7 +27,7 @@
     {
       "food_item": "Rice",
       "detected": false,
-      "response_time_ms": 0.63,
+      "response_time_ms": 3.58,
       "confidence": 0.0,
       "status": "FAIL",
       "error": "Server error"
@@ -35,7 +35,7 @@
     {
       "food_item": "Salmon",
       "detected": false,
-      "response_time_ms": 0.6,
+      "response_time_ms": 3.4,
       "confidence": 0.0,
       "status": "FAIL",
       "error": "Server error"
@@ -79,33 +79,33 @@
   "system_performance": [
     {
       "endpoint": "Fetch Health Profile",
-      "avg_response_time_ms": 1.65,
+      "avg_response_time_ms": 1.38,
       "min_response_time_ms": 1.21,
-      "max_response_time_ms": 3.08,
+      "max_response_time_ms": 1.86,
       "success_rate_percent": 100.0,
       "reliability": "HIGH"
     },
     {
       "endpoint": "Fetch Medical Reports",
-      "avg_response_time_ms": 0.79,
-      "min_response_time_ms": 0.64,
-      "max_response_time_ms": 1.21,
+      "avg_response_time_ms": 1.14,
+      "min_response_time_ms": 0.6,
+      "max_response_time_ms": 2.38,
       "success_rate_percent": 100.0,
       "reliability": "HIGH"
     },
     {
       "endpoint": "Fetch Recommendations",
-      "avg_response_time_ms": 8550.08,
-      "min_response_time_ms": 7625.02,
-      "max_response_time_ms": 9557.8,
-      "success_rate_percent": 0.0,
-      "reliability": "LOW"
+      "avg_response_time_ms": 12288.4,
+      "min_response_time_ms": 8462.05,
+      "max_response_time_ms": 21513.74,
+      "success_rate_percent": 60.0,
+      "reliability": "MEDIUM"
     },
     {
       "endpoint": "Analyze Food",
-      "avg_response_time_ms": 3.14,
-      "min_response_time_ms": 0.85,
-      "max_response_time_ms": 11.84,
+      "avg_response_time_ms": 5.89,
+      "min_response_time_ms": 4.22,
+      "max_response_time_ms": 11.13,
       "success_rate_percent": 0.0,
       "reliability": "LOW"
     }
@@ -149,7 +149,7 @@
     }
   ],
   "metadata": {
-    "test_date": "2026-05-13 09:41:15",
+    "test_date": "2026-06-01 11:10:00",
     "backend_version": "1.0",
     "framework": "Django REST + Next.js"
   }
