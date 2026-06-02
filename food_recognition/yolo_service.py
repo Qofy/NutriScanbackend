@@ -113,6 +113,12 @@ class YOLOFoodDetector:
         return generic_name
 
     def _mock_detection(self, image_file):
+        # ⚠️ WARNING: Using mock detection because YOLO is not loaded!
+        # This means YOLO failed to initialize. Check backend logs for errors.
+        print("⚠️  WARNING: Using mock detection - YOLO is not loaded!")
+        print("⚠️  This is a fallback. Real food detection is not working.")
+        print("⚠️  Check backend logs for YOLO loading errors.")
+
         mock_foods = [
             {'name': 'Apple', 'confidence': 0.95},
             {'name': 'Carrot', 'confidence': 0.92},
@@ -128,7 +134,8 @@ class YOLOFoodDetector:
             'success': True,
             'detected_items': selected_foods,
             'confidence_score': sum(f['confidence'] for f in selected_foods) / len(selected_foods),
-            'mock': True
+            'mock': True,
+            'warning': 'YOLO model failed to load. Returning random mock data. Check backend logs.'
         }
 
 yolo_detector = YOLOFoodDetector()
