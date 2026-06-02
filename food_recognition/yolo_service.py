@@ -12,7 +12,7 @@ import io
 import json
 
 class YOLOFoodDetector:
-    def __init__(self, model_path='yolov8n.pt'):
+    def __init__(self, model_path='yolov8s.pt'):
         self.model = None
         if YOLO is None:
             print("❌ YOLO not installed. Using mock detection.")
@@ -22,6 +22,7 @@ class YOLOFoodDetector:
             print(f"🚀 Loading YOLO model: {model_path}")
             self.model = YOLO(model_path)
             print(f"✅ YOLO model loaded successfully")
+            print(f"📊 Model classes: {len(self.model.names)} - {list(self.model.names.values())[:10]}...")
         except Exception as e:
             print(f"❌ YOLO model loading error: {e}. Using mock detection.")
             import traceback

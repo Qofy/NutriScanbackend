@@ -159,8 +159,8 @@ def _train_yolo_background():
             TRAINING_STATUS['status'] = 'idle'
             return
 
-        # Load base model
-        model_path = 'yolov8n.pt'
+        # Load base model - using yolov8s for better accuracy
+        model_path = 'yolov8s.pt'
         if os.path.exists(os.path.join(MODELS_DIR, 'yolo_retrained.pt')):
             model_path = os.path.join(MODELS_DIR, 'yolo_retrained.pt')
 
