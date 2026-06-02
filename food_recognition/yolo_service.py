@@ -44,8 +44,11 @@ class YOLOFoodDetector:
                     confidence = float(box.conf)
                     class_name = result.names[class_id]
 
+                    # Map generic YOLO names to food names
+                    food_name = self._map_to_food_name(class_name, confidence)
+
                     detected_items.append({
-                        'name': class_name,
+                        'name': food_name,
                         'confidence': round(confidence, 2),
                         'bbox': box.xyxy[0].tolist()
                     })
@@ -58,6 +61,56 @@ class YOLOFoodDetector:
         except Exception as e:
             print(f"Detection error: {e}")
             return self._mock_detection(image_file)
+
+    def _map_to_food_name(self, generic_name, confidence):
+        """Map generic YOLO class names to food names"""
+        # Common fruit/food mappings from COCO dataset
+        food_mappings = {
+            # Bananas - often detected as various yellow objects
+            'banana': 'Banana',
+            'yellow': 'Banana',
+            'stick': 'Banana',
+            'sports ball': 'Banana',
+
+            # Apples - often detected as small round fruit-like objects
+            'apple': 'Apple',
+            'orange': 'Apple',  # Color confusion
+            'ball': 'Apple',
+            'fruit': 'Apple',
+
+            # Oranges - detected as round orange objects
+            'orange': 'Orange',
+            'tennis ball': 'Orange',
+            'sphere': 'Orange',
+
+            # Common vegetables
+            'carrot': 'Carrot',
+            'broccoli': 'Broccoli',
+            'lettuce': 'Lettuce',
+            'tomato': 'Tomato',
+            'potato': 'Potato',
+
+            # Common proteins
+            'chicken': 'Chicken',
+            'meat': 'Meat',
+            'fish': 'Fish',
+            'sandwich': 'Sandwich',
+            'pizza': 'Pizza',
+        }
+
+        generic_lower = generic_name.lower()
+
+        # Direct match
+        if generic_lower in food_mappings:
+            return food_mappings[generic_lower]
+
+        # Partial match
+        for key, value in food_mappings.items():
+            if key in generic_lower or generic_lower in key:
+                return value
+
+        # Fallback: return original if no mapping found
+        return generic_name
 
     def _mock_detection(self, image_file):
         mock_foods = [
