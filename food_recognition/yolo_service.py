@@ -1,3 +1,9 @@
+# Set environment variables to disable GUI libraries before importing
+import os
+os.environ['OPENCV_VIDEOIO_DEBUG'] = '0'
+os.environ['QT_QPA_PLATFORM'] = 'offscreen'  # Disable Qt GUI
+os.environ['MPLBACKEND'] = 'Agg'  # Use non-interactive backend for matplotlib
+
 try:
     from ultralytics import YOLO
     print("✅ ultralytics imported successfully")
