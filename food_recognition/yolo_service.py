@@ -30,7 +30,10 @@ class YOLOFoodDetector:
 
         try:
             image = Image.open(image_file).convert('RGB')
-            results = self.model.predict(image, conf=0.15)
+            # Increased confidence threshold from 0.15 to 0.6 for more accurate detection
+            # 0.15 was too low and caused many false positives
+            # 0.6 requires 60% confidence - much more reliable for food detection
+            results = self.model.predict(image, conf=0.6)
 
             detected_items = []
             for result in results:
@@ -55,22 +58,15 @@ class YOLOFoodDetector:
             return self._mock_detection(image_file)
 
     def _mock_detection(self, image_file):
-        mock_foods = [
-            {'name': 'Apple', 'confidence': 0.95},
-            {'name': 'Carrot', 'confidence': 0.92},
-            {'name': 'Salad', 'confidence': 0.88},
-            {'name': 'Grilled Chicken', 'confidence': 0.91},
-            {'name': 'Rice', 'confidence': 0.89},
-        ]
-
-        import random
-        selected_foods = random.sample(mock_foods, k=random.randint(1, 3))
-
+        # Return empty detection instead of random foods
+        # When YOLO is not available, we should NOT guess - user should use manual entry
+        # or try to load the actual model
+        print("⚠️  YOLO model not loaded - returning empty detection")
         return {
             'success': True,
-            'detected_items': selected_foods,
-            'confidence_score': sum(f['confidence'] for f in selected_foods) / len(selected_foods),
-            'mock': True
+            'detected_items': [],
+            'confidence_score': 0,
+            'warning': 'YOLO model not available. Please use manual food entry or ensure YOLO is properly installed.'
         }
 
 yolo_detector = YOLOFoodDetector()
