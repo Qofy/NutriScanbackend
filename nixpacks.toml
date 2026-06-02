@@ -1,3 +1,0 @@
-[build]
-# Install system dependencies needed by YOLO and OpenCV
-apt = ["libgl1", "libglib2.0-0", "libsm6", "libxext6", "libxrender-dev", "poppler-utils"]
