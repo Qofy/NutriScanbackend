@@ -159,8 +159,11 @@ def _train_yolo_background():
             TRAINING_STATUS['status'] = 'idle'
             return
 
-        # Load base model - using yolov8s for better accuracy
-        model_path = 'yolov8s.pt'
+        # Load base model - use environment variable or default to yolov8s
+        base_model = os.getenv('YOLO_MODEL_PATH', 'yolov8s.pt')
+        model_path = base_model
+
+        # Use custom trained model if it exists
         if os.path.exists(os.path.join(MODELS_DIR, 'yolo_retrained.pt')):
             model_path = os.path.join(MODELS_DIR, 'yolo_retrained.pt')
 

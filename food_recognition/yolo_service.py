@@ -16,9 +16,13 @@ except Exception as e:
 
 import io
 import json
+import os
 
 class YOLOFoodDetector:
-    def __init__(self, model_path='yolov8s.pt'):
+    def __init__(self, model_path=None):
+        # Use environment variable if set, otherwise default to yolov8s.pt
+        if model_path is None:
+            model_path = os.getenv('YOLO_MODEL_PATH', 'yolov8s.pt')
         self.model = None
         if YOLO is None:
             print("❌ YOLO not installed. Using mock detection.")
