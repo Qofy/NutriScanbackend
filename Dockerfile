@@ -26,9 +26,13 @@ RUN pip install --no-cache-dir -r requirements.txt
 # Copy project
 COPY . .
 
-# Run migrations and start server
-CMD set -e && \
-    echo "🚀 Running migrations..." && \
-    python manage.py migrate && \
-    echo "✅ Migrations complete. Starting gunicorn..." && \
-    gunicorn nutriscan.wsgi --bind 0.0.0.0:${PORT:-8000} --workers 1 --timeout 300 --keep-alive 75 --access-logfile - --error-logfile -
+# Create startup script
+RUN echo '#!/bin/bash' > /app/start.sh && \
+    echo 'set -e' >> /app/start.sh && \
+    echo 'echo "🚀 Running migrations..."' >> /app/start.sh && \
+    echo 'python manage.py migrate' >> /app/start.sh && \
+    echo 'echo "✅ Starting gunicorn..."' >> /app/start.sh && \
+    echo 'gunicorn nutriscan.wsgi --bind 0.0.0.0:${PORT:-8000} --workers 1 --timeout 300 --keep-alive 75 --access-logfile - --error-logfile -' >> /app/start.sh && \
+    chmod +x /app/start.sh
+
+CMD ["/app/start.sh"]
