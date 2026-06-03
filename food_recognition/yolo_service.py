@@ -26,13 +26,13 @@ import os
 
 class YOLOFoodDetector:
     def __init__(self, model_path=None):
-        # Use environment variable if set, otherwise default to yolov8s.pt
+        # Use environment variable if set, otherwise default to yolov8m.pt
         if model_path is None:
-            model_path = os.getenv('YOLO_MODEL_PATH', 'yolov8s.pt')
+            model_path = os.getenv('YOLO_MODEL_PATH', 'yolov8m.pt')
         self.model = None
+
         if YOLO is None:
-            print("❌ YOLO not installed. Using mock detection.")
-            return
+            raise RuntimeError("❌ CRITICAL: YOLO not installed. Real food detection is REQUIRED.")
 
         try:
             print(f"🚀 Loading YOLO model: {model_path}")
@@ -40,14 +40,12 @@ class YOLOFoodDetector:
             print(f"✅ YOLO model loaded successfully")
             print(f"📊 Model classes: {len(self.model.names)} - {list(self.model.names.values())[:10]}...")
         except Exception as e:
-            print(f"❌ YOLO model loading error: {e}. Using mock detection.")
-            import traceback
-            traceback.print_exc()
-            self.model = None
+            raise RuntimeError(f"❌ CRITICAL: YOLO model loading failed: {e}. Real food detection is REQUIRED.")
 
     def detect_food(self, image_file):
+        # YOLO is required - no fallbacks allowed
         if self.model is None:
-            return self._mock_detection(image_file)
+            raise RuntimeError("❌ CRITICAL: YOLO model not loaded. Real food detection is REQUIRED.")
 
         try:
             image = Image.open(image_file).convert('RGB')
@@ -69,14 +67,16 @@ class YOLOFoodDetector:
                         'bbox': box.xyxy[0].tolist()
                     })
 
+            if not detected_items:
+                raise RuntimeError("❌ CRITICAL: No food items detected. Real detection required.")
+
             return {
                 'success': True,
                 'detected_items': detected_items,
                 'confidence_score': max([item['confidence'] for item in detected_items], default=0)
             }
         except Exception as e:
-            print(f"Detection error: {e}")
-            return self._mock_detection(image_file)
+            raise RuntimeError(f"❌ CRITICAL: Food detection failed: {e}. Real detection is REQUIRED.")
 
     def _map_to_food_name(self, generic_name, confidence):
         """Map generic YOLO class names to food names"""
@@ -127,31 +127,5 @@ class YOLOFoodDetector:
 
         # Fallback: return original if no mapping found
         return generic_name
-
-    def _mock_detection(self, image_file):
-        # ⚠️ WARNING: Using mock detection because YOLO is not loaded!
-        # This means YOLO failed to initialize. Check backend logs for errors.
-        print("⚠️  WARNING: Using mock detection - YOLO is not loaded!")
-        print("⚠️  This is a fallback. Real food detection is not working.")
-        print("⚠️  Check backend logs for YOLO loading errors.")
-
-        mock_foods = [
-            {'name': 'Apple', 'confidence': 0.95},
-            {'name': 'Carrot', 'confidence': 0.92},
-            {'name': 'Salad', 'confidence': 0.88},
-            {'name': 'Grilled Chicken', 'confidence': 0.91},
-            {'name': 'Rice', 'confidence': 0.89},
-        ]
-
-        import random
-        selected_foods = random.sample(mock_foods, k=random.randint(1, 3))
-
-        return {
-            'success': True,
-            'detected_items': selected_foods,
-            'confidence_score': sum(f['confidence'] for f in selected_foods) / len(selected_foods),
-            'mock': True,
-            'warning': 'YOLO model failed to load. Returning random mock data. Check backend logs.'
-        }
 
 yolo_detector = YOLOFoodDetector()
