@@ -1,0 +1,39 @@
+# fly.toml app configuration file generated for nutriscanbackend
+app = "nutriscanbackend"
+primary_region = "iad"
+
+[build]
+  dockerfile = "Dockerfile"
+
+[env]
+  PORT = "8000"
+
+[processes]
+  web = "python manage.py migrate && gunicorn nutriscan.wsgi --bind 0.0.0.0:${PORT} --workers 2 --timeout 120"
+
+[[services]]
+  protocol = "tcp"
+  internal_port = 8000
+  processes = ["web"]
+
+  [services.concurrency]
+    type = "connections"
+    hard_limit = 1000
+    soft_limit = 900
+
+  [[services.ports]]
+    port = 80
+    handlers = ["http"]
+    force_https = true
+
+  [[services.ports]]
+    port = 443
+    handlers = ["tls", "http"]
+
+  [services.http_checks]
+    enabled = true
+    interval = 10000
+    timeout = 5000
+    grace_period = "5s"
+    method = "GET"
+    path = "/"
