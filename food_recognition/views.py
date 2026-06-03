@@ -207,6 +207,9 @@ class FoodAnalysisViewSet(viewsets.ModelViewSet):
 
             user = request.user if request.user.is_authenticated else None
 
+            # Reset file pointer after detection (it was read by YOLO)
+            image_file.seek(0)
+
             food_analysis = FoodAnalysis.objects.create(
                 user=user,
                 image=image_file,
