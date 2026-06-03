@@ -41,4 +41,4 @@ RUN python manage.py collectstatic --noinput
 
 EXPOSE 8080
 
-CMD gunicorn --bind 0.0.0.0:8080 --workers 2 nutriscan.wsgi
+CMD gunicorn --bind 0.0.0.0:8080 --workers 2 --timeout 300 nutriscan.wsgi
