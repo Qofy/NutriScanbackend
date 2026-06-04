@@ -1,0 +1,8 @@
+runs/
+yolo_food101/
+food_dataset/
+*.pt
+venv/
+.git/
+.DS_Store
+__pycache__/

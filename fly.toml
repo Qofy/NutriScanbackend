@@ -1,0 +1,36 @@
+app = "nutriscanbackend"
+primary_region = "iad"
+
+[build]
+  dockerfile = "Dockerfile"
+
+[env]
+  PORT = "8080"
+
+[processes]
+  web = "gunicorn --bind 0.0.0.0:8080 --workers 4 --threads 2 --timeout 300 nutriscan.wsgi"
+
+[[services]]
+  protocol = "tcp"
+  internal_port = 8080
+  processes = ["web"]
+
+  [services.concurrency]
+    type = "connections"
+    hard_limit = 1000
+    soft_limit = 100
+
+  [[services.ports]]
+    port = 80
+    handlers = ["http"]
+    force_https = true
+
+  [[services.ports]]
+    port = 443
+    handlers = ["tls", "http"]
+
+  [services.tcp_checks]
+    interval = "15s"
+    timeout = "10s"
+    grace_period = "30s"
+    method = "connection"
