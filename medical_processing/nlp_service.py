@@ -620,19 +620,10 @@ Return ONLY a JSON object (no markdown, no other text) with this exact structure
             logger.error(f"❌ File processing error: {e}", exc_info=True)
             raw_text = ''
 
-        # If text extraction failed, try OCR and vision APIs for image-based documents
+        # If text extraction failed, try vision APIs for image-based documents
         if not raw_text or len(raw_text.strip()) < 10:
             if file_obj.name.endswith(('.pdf', '.png', '.jpg', '.jpeg')):
-                logger.info('📸 Text extraction failed, trying OCR for image-based document...')
-
-                # Try local OCR first (no API needed)
-                file_obj.seek(0)
-                ocr_text = MedicalDocumentProcessor.extract_text_with_ocr(file_obj)
-                if ocr_text and len(ocr_text.strip()) > 10:
-                    logger.info('✅ OCR extraction successful')
-                    raw_text = ocr_text
-                else:
-                    logger.warning('⚠️ OCR extraction failed or returned empty, trying vision APIs...')
+                logger.info('📸 Text extraction failed, trying vision APIs for image-based document...')
 
                     # Try Ollama vision
                     file_obj.seek(0)
