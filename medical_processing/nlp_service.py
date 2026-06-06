@@ -625,34 +625,34 @@ Return ONLY a JSON object (no markdown, no other text) with this exact structure
             if file_obj.name.endswith(('.pdf', '.png', '.jpg', '.jpeg')):
                 logger.info('📸 Text extraction failed, trying vision APIs for image-based document...')
 
-                    # Try Ollama vision
-                    file_obj.seek(0)
-                    vision_result = MedicalDocumentProcessor.extract_with_ollama_vision(file_obj)
-                    if vision_result:
-                        logger.info('✅ Ollama vision extraction successful')
-                        return {
-                            'raw_text': 'Extracted via Ollama vision',
-                            'conditions': vision_result.get('conditions', []),
-                            'allergens': vision_result.get('allergens', []),
-                            'dietary_restrictions': vision_result.get('dietary_restrictions', []),
-                            'is_mock': False,
-                            'extraction_method': 'Ollama Vision'
-                        }
+                # Try Ollama vision
+                file_obj.seek(0)
+                vision_result = MedicalDocumentProcessor.extract_with_ollama_vision(file_obj)
+                if vision_result:
+                    logger.info('✅ Ollama vision extraction successful')
+                    return {
+                        'raw_text': 'Extracted via Ollama vision',
+                        'conditions': vision_result.get('conditions', []),
+                        'allergens': vision_result.get('allergens', []),
+                        'dietary_restrictions': vision_result.get('dietary_restrictions', []),
+                        'is_mock': False,
+                        'extraction_method': 'Ollama Vision'
+                    }
 
-                    # Fall back to Claude vision if available
-                    logger.info('⚠️ Trying Claude vision...')
-                    file_obj.seek(0)
-                    vision_result = MedicalDocumentProcessor.extract_with_claude_vision(file_obj)
-                    if vision_result:
-                        logger.info('✅ Claude vision extraction successful')
-                        return {
-                            'raw_text': 'Extracted via vision API',
-                            'conditions': vision_result.get('conditions', []),
-                            'allergens': vision_result.get('allergens', []),
-                            'dietary_restrictions': vision_result.get('dietary_restrictions', []),
-                            'is_mock': False,
-                            'extraction_method': 'Claude Vision'
-                        }
+                # Fall back to Claude vision if available
+                logger.info('⚠️ Trying Claude vision...')
+                file_obj.seek(0)
+                vision_result = MedicalDocumentProcessor.extract_with_claude_vision(file_obj)
+                if vision_result:
+                    logger.info('✅ Claude vision extraction successful')
+                    return {
+                        'raw_text': 'Extracted via vision API',
+                        'conditions': vision_result.get('conditions', []),
+                        'allergens': vision_result.get('allergens', []),
+                        'dietary_restrictions': vision_result.get('dietary_restrictions', []),
+                        'is_mock': False,
+                        'extraction_method': 'Claude Vision'
+                    }
 
             # Only use mock data if we still have no text after all extraction attempts
             if not raw_text or len(raw_text.strip()) < 10:
