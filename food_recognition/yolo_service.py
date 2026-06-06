@@ -67,9 +67,6 @@ class YOLOFoodDetector:
                         'bbox': box.xyxy[0].tolist()
                     })
 
-            if not detected_items:
-                raise RuntimeError("❌ CRITICAL: No food items detected. Real detection required.")
-
             return {
                 'success': True,
                 'detected_items': detected_items,
