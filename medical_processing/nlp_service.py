@@ -6,6 +6,22 @@ from django.conf import settings
 
 logger = logging.getLogger(__name__)
 
+# Pre-load OCR reader at module import to cache models
+_ocr_reader = None
+
+def _get_ocr_reader():
+    global _ocr_reader
+    if _ocr_reader is None:
+        try:
+            import easyocr
+            logger.info("📥 Pre-loading EasyOCR models at startup...")
+            _ocr_reader = easyocr.Reader(['en'], verbose=False, gpu=False)
+            logger.info("✅ OCR reader cached and ready")
+        except Exception as e:
+            logger.warning(f"⚠️ Failed to pre-load OCR: {e}")
+            _ocr_reader = False
+    return _ocr_reader if _ocr_reader else None
+
 COMMON_HEALTH_CONDITIONS = {
     'diabetes': {
         'keywords': ['diabetes', 'blood sugar', 'glucose', 'insulin'],
@@ -82,9 +98,12 @@ class MedicalDocumentProcessor:
                 logger.error("❌ No images to process")
                 return ""
 
-            # Initialize OCR reader
-            logger.info('🤖 Initializing OCR reader (this may take a minute on first run)...')
-            reader = easyocr.Reader(['en'], verbose=False)
+            # Use cached OCR reader
+            logger.info('🤖 Getting OCR reader...')
+            reader = _get_ocr_reader()
+            if not reader:
+                logger.error("❌ OCR reader not available")
+                return ""
             logger.info('✅ OCR reader ready')
 
             # Extract text from all images
@@ -581,9 +600,11 @@ Return ONLY a JSON object (no markdown, no other text) with this exact structure
                 logger.info('📑 Extracting text from PDF...')
                 raw_text = MedicalDocumentProcessor.extract_text_from_pdf(file_obj)
                 if not raw_text or raw_text.strip() == '':
-                    logger.warning('⚠️ PDF extraction returned empty text')
-                    logger.info('💡 Note: PDF might be image-based (scanned). Consider uploading as text or image file.')
-                    # Don't try to read as text - PDFs are binary
+                    logger.warning('⚠️ PDF text extraction returned empty, likely image-based PDF')
+            elif file_obj.name.endswith(('.png', '.jpg', '.jpeg')):
+                logger.info('🖼️ Processing image file...')
+                # Image files will be handled by OCR below
+                raw_text = ''
             else:
                 logger.info('📝 Reading as text file...')
                 try:
