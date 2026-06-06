@@ -102,6 +102,42 @@ class MedicalReportViewSet(viewsets.ModelViewSet):
             medical_report.status = 'completed'
             medical_report.save()
 
+            # Automatically update user's health profile with extracted data
+            if request.user and request.user.is_authenticated:
+                health_profile = request.user.health_profile
+
+                # Add extracted conditions to health profile
+                if result['conditions']:
+                    existing_conditions = health_profile.health_conditions or []
+                    for condition in result['conditions']:
+                        condition_name = condition['condition'].lower()
+                        # Avoid duplicates
+                        if not any(c.lower() == condition_name for c in existing_conditions):
+                            existing_conditions.append(condition['condition'])
+                    health_profile.health_conditions = existing_conditions
+
+                # Add extracted allergies to health profile
+                if result['allergens']:
+                    existing_allergies = health_profile.allergies or []
+                    for allergen in result['allergens']:
+                        allergen_name = allergen['allergen'].lower()
+                        # Avoid duplicates
+                        if not any(a.lower() == allergen_name for a in existing_allergies):
+                            existing_allergies.append(allergen['allergen'])
+                    health_profile.allergies = existing_allergies
+
+                # Add extracted dietary restrictions to health profile
+                if result['dietary_restrictions']:
+                    existing_restrictions = health_profile.dietary_restrictions or []
+                    for restriction in result['dietary_restrictions']:
+                        restriction_name = restriction['restriction'].lower()
+                        # Avoid duplicates
+                        if not any(r.lower() == restriction_name for r in existing_restrictions):
+                            existing_restrictions.append(restriction['restriction'])
+                    health_profile.dietary_restrictions = existing_restrictions
+
+                health_profile.save()
+
             serializer = MedicalReportSerializer(medical_report, context={'request': request})
             return Response(serializer.data, status=status.HTTP_201_CREATED)
 

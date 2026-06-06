@@ -49,6 +49,16 @@ class RecommendationViewSet(viewsets.ModelViewSet):
         conditions = request.query_params.getlist('conditions', [])
         allergens = request.query_params.getlist('allergens', [])
 
+        # If no conditions provided, use user's health profile
+        if not conditions and request.user and request.user.is_authenticated:
+            try:
+                profile = request.user.health_profile
+                conditions = profile.health_conditions or []
+                allergens = profile.allergies or []
+                logger.info(f"✓ Using profile conditions: {conditions}")
+            except:
+                pass
+
         user_profile = {
             'conditions': conditions,
             'allergens': allergens
@@ -66,6 +76,16 @@ class RecommendationViewSet(viewsets.ModelViewSet):
     def tips(self, request):
         conditions = request.query_params.getlist('conditions', [])
         allergens = request.query_params.getlist('allergens', [])
+
+        # If no conditions provided, use user's health profile
+        if not conditions and request.user and request.user.is_authenticated:
+            try:
+                profile = request.user.health_profile
+                conditions = profile.health_conditions or []
+                allergens = profile.allergies or []
+                logger.info(f"✓ Using profile conditions for tips: {conditions}")
+            except:
+                pass
 
         user_profile = {
             'conditions': conditions,
