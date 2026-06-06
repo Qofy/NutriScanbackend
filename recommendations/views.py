@@ -15,12 +15,11 @@ logger = logging.getLogger(__name__)
 class RecommendationViewSet(viewsets.ModelViewSet):
     serializer_class = RecommendationSerializer
     parser_classes = (JSONParser, MultiPartParser, FormParser)
-    permission_classes = [AllowAny]
+    permission_classes = [IsAuthenticated]
 
     def get_queryset(self):
-        if self.request.user and self.request.user.is_authenticated:
-            return Recommendation.objects.filter(user=self.request.user)
-        return Recommendation.objects.none()
+        # Only return recommendations for the authenticated user
+        return Recommendation.objects.filter(user=self.request.user)
 
     @action(detail=False, methods=['post'])
     def generate(self, request):

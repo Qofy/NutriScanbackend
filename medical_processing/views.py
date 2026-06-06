@@ -11,12 +11,11 @@ from recommendations.models import Recommendation
 class MedicalReportViewSet(viewsets.ModelViewSet):
     serializer_class = MedicalReportSerializer
     parser_classes = (MultiPartParser, FormParser)
-    permission_classes = [AllowAny]
+    permission_classes = [IsAuthenticated]
 
     def get_queryset(self):
-        if self.request.user and self.request.user.is_authenticated:
-            return MedicalReport.objects.filter(user=self.request.user)
-        return MedicalReport.objects.filter(user=None)
+        # Only return reports for the authenticated user
+        return MedicalReport.objects.filter(user=self.request.user)
 
     def destroy(self, request, *args, **kwargs):
         """Delete medical report and associated recommendations"""
