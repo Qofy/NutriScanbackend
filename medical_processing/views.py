@@ -7,6 +7,9 @@ from .models import MedicalReport, ExtractedHealthInfo, Allergy, DietaryRestrict
 from .serializers import MedicalReportSerializer, MedicalReportListSerializer
 from .nlp_service import MedicalDocumentProcessor
 from recommendations.models import Recommendation
+import logging
+
+logger = logging.getLogger(__name__)
 
 class MedicalReportViewSet(viewsets.ModelViewSet):
     serializer_class = MedicalReportSerializer
@@ -19,14 +22,24 @@ class MedicalReportViewSet(viewsets.ModelViewSet):
 
     def destroy(self, request, *args, **kwargs):
         """Delete medical report and associated recommendations"""
-        report = self.get_object()
-        user = request.user if request.user.is_authenticated else None
+        try:
+            report = self.get_object()
+            report_id = report.id
+            user = request.user if request.user.is_authenticated else None
 
-        # Delete all recommendations for this user
-        # (since they were generated based on this report)
-        Recommendation.objects.filter(user=user).delete()
+            logger.info(f"🗑️ Deleting medical report {report_id} for user {user}")
 
-        return super().destroy(request, *args, **kwargs)
+            # Delete all recommendations for this user
+            # (since they were generated based on this report)
+            deleted_recs = Recommendation.objects.filter(user=user).delete()
+            logger.info(f"✓ Deleted {deleted_recs[0]} recommendations")
+
+            response = super().destroy(request, *args, **kwargs)
+            logger.info(f"✅ Successfully deleted report {report_id}")
+            return response
+        except Exception as e:
+            logger.error(f"❌ Error deleting report: {e}", exc_info=True)
+            return Response({'error': str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
     @action(detail=False, methods=['post'])
     def upload(self, request):
