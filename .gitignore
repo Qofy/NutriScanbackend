@@ -40,8 +40,8 @@ htmlcov/
 
 *.bak
 
-# YOLO model files and training data
-yolov8*.pt
-yolo_food101/
-food_dataset/
-runs/
+# # YOLO model files and training data
+# yolov8*.pt
+# yolo_food101/
+# food_dataset/
+# runs/

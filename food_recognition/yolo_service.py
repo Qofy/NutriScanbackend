@@ -28,7 +28,7 @@ class YOLOFoodDetector:
     def __init__(self, model_path=None):
         # Use environment variable if set, otherwise default to yolov8m.pt
         if model_path is None:
-            model_path = os.getenv('YOLO_MODEL_PATH', 'yolov8m.pt')
+            model_path = os.getenv('YOLO_MODEL_PATH', 'models/yolov8m_food101.pt')
         self.model = None
 
         if YOLO is None:
