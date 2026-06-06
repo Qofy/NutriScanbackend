@@ -9,7 +9,7 @@ from .models import UserHealthProfile, DailyTracking, SavedFood
 from .serializers import UserHealthProfileSerializer, DailyTrackingSerializer, SavedFoodSerializer, UserSerializer
 
 class UserHealthProfileViewSet(viewsets.ViewSet):
-    permission_classes = [AllowAny]
+    permission_classes = [IsAuthenticated]
     def retrieve(self, request):
         try:
             profile, created = UserHealthProfile.objects.get_or_create(user=request.user)
@@ -68,12 +68,10 @@ class UserHealthProfileViewSet(viewsets.ViewSet):
 
 class DailyTrackingViewSet(viewsets.ModelViewSet):
     serializer_class = DailyTrackingSerializer
-    permission_classes = [AllowAny]
+    permission_classes = [IsAuthenticated]
 
     def get_queryset(self):
-        if self.request.user and self.request.user.is_authenticated:
-            return DailyTracking.objects.filter(user=self.request.user)
-        return DailyTracking.objects.none()
+        return DailyTracking.objects.filter(user=self.request.user)
 
     def create(self, request):
         data = request.data.copy()
@@ -97,7 +95,7 @@ class DailyTrackingViewSet(viewsets.ModelViewSet):
 
 class SavedFoodViewSet(viewsets.ModelViewSet):
     serializer_class = SavedFoodSerializer
-    permission_classes = [AllowAny]
+    permission_classes = [IsAuthenticated]
 
     def get_queryset(self):
         if self.request.user and self.request.user.is_authenticated:
@@ -184,12 +182,12 @@ class CurrentUserViewSet(viewsets.ViewSet):
 
     permission_classes = [AllowAny]
 
-    @action(detail=False, methods=['get'])
+    @action(detail=False, methods=['get'], permission_classes=[IsAuthenticated])
     def me(self, request):
         serializer = UserSerializer(request.user)
         return Response(serializer.data)
 
-    @action(detail=False, methods=['put'])
+    @action(detail=False, methods=['put'], permission_classes=[IsAuthenticated])
     def update_profile(self, request):
         serializer = UserSerializer(request.user, data=request.data, partial=True)
         if serializer.is_valid():
