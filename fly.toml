@@ -6,7 +6,6 @@ primary_region = "iad"
 
 [env]
   PORT = "8080"
-  YOLO_MODEL_PATH = "yolov8m.pt"
 
 [processes]
   web = "gunicorn --bind 0.0.0.0:8080 --workers 2 --threads 2 --timeout 300 nutriscan.wsgi"
