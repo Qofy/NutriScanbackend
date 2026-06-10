@@ -590,6 +590,111 @@ Return ONLY a JSON object (no markdown, no other text) with this exact structure
             return None
 
     @staticmethod
+    def generate_clinical_summary(raw_text, conditions, allergens, restrictions, extraction_method):
+        """Generate comprehensive clinical interpretation with report assessment and limitations"""
+        try:
+            api_key = getattr(settings, 'ANTHROPIC_API_KEY', None)
+            if not api_key or not api_key.strip():
+                logger.warning('❌ Claude API key not configured for summary')
+                return None
+
+            logger.info('📝 Generating clinical summary with report assessment...')
+
+            # Analyze what's in the report
+            report_sections = {
+                'lab_values': 'hba1c' in raw_text.lower() or 'glucose' in raw_text.lower(),
+                'medications': 'medication' in raw_text.lower() or 'rx' in raw_text.lower(),
+                'family_history': 'family' in raw_text.lower() or 'hereditary' in raw_text.lower(),
+                'lifestyle': 'diet' in raw_text.lower() or 'exercise' in raw_text.lower() or 'smoking' in raw_text.lower(),
+                'allergies': 'allerg' in raw_text.lower(),
+                'vital_signs': 'bp' in raw_text.lower() or 'blood pressure' in raw_text.lower() or 'weight' in raw_text.lower(),
+            }
+
+            present_sections = [k for k, v in report_sections.items() if v]
+            missing_sections = [k for k, v in report_sections.items() if not v]
+            completeness = int((len(present_sections) / 6) * 100)
+
+            # Determine report type
+            report_type = 'General Medical Report'
+            if 'lab' in raw_text.lower() or 'hba1c' in raw_text.lower():
+                report_type = 'Laboratory Report'
+            elif 'allerg' in raw_text.lower():
+                report_type = 'Allergy Testing Report'
+            elif 'clinical' in raw_text.lower() or 'note' in raw_text.lower():
+                report_type = 'Clinical Notes'
+
+            prompt = f"""You are a medical AI assistant. Analyze this medical report and provide a comprehensive clinical summary with three sections:
+
+MEDICAL REPORT:
+{raw_text[:2000]}
+
+EXTRACTED DATA:
+- Conditions: {[c.get('condition') for c in conditions]}
+- Allergens: {[a.get('allergen') for a in allergens]}
+- Restrictions: {[r.get('restriction') for r in restrictions]}
+
+REPORT METADATA:
+- Type: {report_type}
+- Present sections: {', '.join(present_sections) if present_sections else 'minimal'}
+- Missing sections: {', '.join(missing_sections)}
+- Completeness: {completeness}%
+
+Generate a response with exactly 3 sections (use === SECTION NAME === format):
+
+1. REPORT ASSESSMENT
+   - What type of report is this?
+   - Quality of structure (Well-structured / Partially-structured / Poorly-structured)
+   - Completeness percentage
+   - Notable gaps (what critical info is missing?)
+
+2. CLINICAL INTERPRETATION
+   - For each condition found, explain what it means in plain language
+   - Include specific values/measurements mentioned (e.g., "HbA1C of 5%")
+   - Explain clinical significance and health implications
+   - What does this mean for the patient's health?
+
+3. REPORT LIMITATIONS
+   - List what information was NOT found but would be important
+   - Explain why missing data affects recommendations
+   - Confidence level in the extracted information
+   - Warning flags (e.g., "This lab report lacks medication history, so recommendations may not account for drug interactions")
+
+Keep language clear for patients, not overly technical. Be specific about values and findings."""
+
+            url = 'https://api.anthropic.com/v1/messages'
+            headers = {
+                'x-api-key': api_key,
+                'anthropic-version': '2023-06-01',
+                'content-type': 'application/json'
+            }
+
+            payload = {
+                'model': 'claude-opus-4-1',
+                'max_tokens': 2000,
+                'messages': [{'role': 'user', 'content': prompt}]
+            }
+
+            response = requests.post(url, json=payload, headers=headers, timeout=30)
+            if response.status_code == 200:
+                data = response.json()
+                summary_text = data.get('content', [{}])[0].get('text', '').strip()
+                logger.info(f'✅ Clinical summary generated: {len(summary_text)} characters')
+                return {
+                    'clinical_summary': summary_text,
+                    'report_type': report_type,
+                    'completeness': completeness,
+                    'missing_sections': missing_sections,
+                    'extraction_method': extraction_method
+                }
+            else:
+                logger.warning(f'❌ Claude API error: {response.status_code}')
+                return None
+
+        except Exception as e:
+            logger.warning(f'❌ Clinical summary generation failed: {e}')
+            return None
+
+    @staticmethod
     def process_medical_document(file_obj):
         raw_text = ''
         is_mock_data = False
@@ -660,20 +765,6 @@ Return ONLY a JSON object (no markdown, no other text) with this exact structure
                 is_mock_data = True
                 raw_text = MedicalDocumentProcessor._mock_document_text()
 
-        # Try AI summary on extracted text
-        logger.info('🔍 Attempting AI summary of extracted text...')
-        ai_summary = None
-        try:
-            ai_result = MedicalDocumentProcessor.extract_with_ai(raw_text)
-            logger.info(f'📊 AI result: {ai_result}')
-            if ai_result and ai_result.get('summary'):
-                ai_summary = ai_result.get('summary')
-                logger.info(f'✅ AI summary created: {len(ai_summary)} characters')
-            else:
-                logger.warning(f'⚠️ No summary in AI result: {ai_result}')
-        except Exception as e:
-            logger.error(f'❌ Error generating AI summary: {e}')
-
         # Always do keyword matching as fallback/supplement
         logger.info('📚 Running keyword-based extraction...')
         conditions = MedicalDocumentProcessor.extract_health_conditions(raw_text)
@@ -682,14 +773,28 @@ Return ONLY a JSON object (no markdown, no other text) with this exact structure
 
         logger.info(f"✓ Keyword extraction found: {len(conditions)} conditions, {len(allergens)} allergens, {len(restrictions)} restrictions")
 
+        # Generate comprehensive clinical summary with report assessment
+        extraction_method = 'keyword' if not is_mock_data else 'mock'
+        logger.info('📋 Generating comprehensive clinical summary with report assessment...')
+        clinical_summary_result = MedicalDocumentProcessor.generate_clinical_summary(
+            raw_text,
+            conditions,
+            allergens,
+            restrictions,
+            extraction_method
+        )
+
         return {
             'raw_text': raw_text,  # Full extracted text for display and analysis
-            'extracted_summary': ai_summary,  # AI-generated summary if available
+            'clinical_summary': clinical_summary_result.get('clinical_summary') if clinical_summary_result else None,  # Comprehensive 3-section summary
+            'report_type': clinical_summary_result.get('report_type') if clinical_summary_result else 'Unknown',
+            'completeness': clinical_summary_result.get('completeness') if clinical_summary_result else 0,
+            'missing_sections': clinical_summary_result.get('missing_sections') if clinical_summary_result else [],
             'conditions': conditions,
             'allergens': allergens,
             'dietary_restrictions': restrictions,
             'is_mock': is_mock_data,
-            'extraction_method': 'keyword' if not is_mock_data else 'mock'
+            'extraction_method': extraction_method
         }
 
     @staticmethod

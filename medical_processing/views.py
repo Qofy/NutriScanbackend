@@ -107,7 +107,10 @@ class MedicalReportViewSet(viewsets.ModelViewSet):
                 'dietary_restrictions': result['dietary_restrictions'],
                 'is_mock': result.get('is_mock', False),
                 'extraction_method': result.get('extraction_method', 'unknown'),
-                'extracted_summary': result.get('extracted_summary'),  # AI summary if available
+                'clinical_summary': result.get('clinical_summary'),  # Comprehensive 3-section summary
+                'report_type': result.get('report_type', 'Unknown'),
+                'completeness': result.get('completeness', 0),
+                'missing_sections': result.get('missing_sections', []),
                 'raw_text_preview': result['raw_text'][:500] if result['raw_text'] else ''
             }
             medical_report.raw_text = result['raw_text']
