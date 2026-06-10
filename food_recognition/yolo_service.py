@@ -48,8 +48,17 @@ class YOLOFoodDetector:
             raise RuntimeError("❌ CRITICAL: YOLO model not loaded. Real food detection is REQUIRED.")
 
         try:
-            image = Image.open(image_file).convert('RGB')
-            results = self.model.predict(image, conf=0.15)
+            # YOLO works best with file paths; if PIL Image, convert to path
+            if isinstance(image_file, str):
+                # File path - pass directly to YOLO
+                results = self.model.predict(image_file, conf=0.15)
+            else:
+                # PIL Image object - save temporarily and use path
+                import tempfile
+                with tempfile.NamedTemporaryFile(suffix='.jpg', delete=False) as tmp:
+                    image_file.save(tmp.name)
+                    results = self.model.predict(tmp.name, conf=0.15)
+                    os.unlink(tmp.name)
 
             detected_items = []
             for result in results:
