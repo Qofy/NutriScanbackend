@@ -1,0 +1,163 @@
+[
+  {
+    "file": "aids.jpg",
+    "success": true,
+    "extraction_method": "Ollama Vision",
+    "is_mock": false,
+    "report_type": "Unknown",
+    "completeness": 0,
+    "conditions_count": 2,
+    "allergens_count": 0,
+    "restrictions_count": 0,
+    "has_clinical_summary": false,
+    "conditions": [
+      {
+        "condition": "HIV",
+        "severity": "high",
+        "confidence": 0.98
+      },
+      {
+        "condition": "AIDS",
+        "severity": "high",
+        "confidence": 0.98
+      }
+    ],
+    "allergens": [],
+    "restrictions": [],
+    "clinical_summary": ""
+  },
+  {
+    "file": "allergy.pdf",
+    "success": false,
+    "error": "Could not extract text from document. Ensure document is clear and readable."
+  },
+  {
+    "file": "allergy.webp",
+    "success": false,
+    "error": "Could not extract text from document. Ensure document is clear and readable."
+  },
+  {
+    "file": "allg.pdf",
+    "success": false,
+    "error": "Could not extract text from document. Ensure document is clear and readable."
+  },
+  {
+    "file": "hba.png",
+    "success": true,
+    "extraction_method": "Ollama Vision",
+    "is_mock": false,
+    "report_type": "Unknown",
+    "completeness": 0,
+    "conditions_count": 1,
+    "allergens_count": 0,
+    "restrictions_count": 1,
+    "has_clinical_summary": false,
+    "conditions": [
+      {
+        "condition": "Prediabetes / Elevated Blood Sugar",
+        "severity": "moderate",
+        "confidence": 0.8
+      }
+    ],
+    "allergens": [],
+    "restrictions": [
+      {
+        "restriction": "Monitor and control carbohydrate intake",
+        "reason": "HbA1C level of 5% is slightly above the goal range (less than 7%) and estimated average glucose is 96.80 mg/dL, which is slightly above the recommended reference range (90-120 mg/dL)",
+        "recommendation": "Focus on maintaining a balanced diet with controlled sugar and carbohydrate intake to achieve better glycemic control and reach the goal HbA1C level of less than 7%"
+      }
+    ],
+    "clinical_summary": ""
+  },
+  {
+    "file": "heart-diseases.pdf",
+    "success": false,
+    "error": "Could not extract text from document. Ensure document is clear and readable."
+  },
+  {
+    "file": "heart-diseases.png",
+    "success": true,
+    "extraction_method": "Ollama Vision",
+    "is_mock": false,
+    "report_type": "Unknown",
+    "completeness": 0,
+    "conditions_count": 5,
+    "allergens_count": 0,
+    "restrictions_count": 0,
+    "has_clinical_summary": false,
+    "conditions": [
+      {
+        "condition": "Coronary Artery Disease (CAD) involving Left Anterior Descending artery (LAD) and Right Coronary Artery (RCA)",
+        "severity": "high",
+        "confidence": 0.9
+      },
+      {
+        "condition": "Myocardial Ischemia (Interoparental Hypokinesis)",
+        "severity": "high",
+        "confidence": 0.9
+      },
+      {
+        "condition": "Left Ventricular Hypokinesis",
+        "severity": "moderate",
+        "confidence": 0.8
+      },
+      {
+        "condition": "Reduced Left Ventricular Ejection Fraction (LVEF) at 33%",
+        "severity": "high",
+        "confidence": 0.95
+      },
+      {
+        "condition": "Definite systolic wall thickening defect in anteroseptal and apical regions",
+        "severity": "moderate",
+        "confidence": 0.85
+      }
+    ],
+    "allergens": [],
+    "restrictions": [],
+    "clinical_summary": ""
+  },
+  {
+    "file": "hy.png",
+    "success": true,
+    "extraction_method": "Ollama Vision",
+    "is_mock": false,
+    "report_type": "Unknown",
+    "completeness": 0,
+    "conditions_count": 1,
+    "allergens_count": 0,
+    "restrictions_count": 0,
+    "has_clinical_summary": false,
+    "conditions": [
+      {
+        "condition": "Hypertensive Crisis",
+        "severity": "critical",
+        "confidence": 0.98
+      }
+    ],
+    "allergens": [],
+    "restrictions": [],
+    "clinical_summary": ""
+  },
+  {
+    "file": "syphilies.png",
+    "success": true,
+    "extraction_method": "Ollama Vision",
+    "is_mock": false,
+    "report_type": "Unknown",
+    "completeness": 0,
+    "conditions_count": 1,
+    "allergens_count": 0,
+    "restrictions_count": 0,
+    "has_clinical_summary": false,
+    "conditions": [
+      {
+        "condition": "Syphilis",
+        "severity": "high",
+        "confidence": 0.8
+      }
+    ],
+    "allergens": [],
+    "restrictions": [],
+    "clinical_summary": ""
+  }
+]

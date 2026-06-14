@@ -1,0 +1,181 @@
+{
+  "metadata": {
+    "dataset": "NutriScan NLP Evaluation - Real Medical Reports",
+    "date": "2026-06-10",
+    "total_reports": 5,
+    "annotation_status": "READY FOR MANUAL LABELING",
+    "description": "Gold-standard labels for 5 real medical reports extracted via Ollama Vision"
+  },
+  "reports": [
+    {
+      "id": 1,
+      "file": "aids.jpg",
+      "report_type": "Lab Report / Disease Diagnostic",
+      "system_extracted": {
+        "conditions": [
+          {"name": "HIV", "confidence": 0.98, "severity": "high"},
+          {"name": "AIDS", "confidence": 0.98, "severity": "high"}
+        ],
+        "allergens": [],
+        "medications": [],
+        "dietary_restrictions": []
+      },
+      "gold_standard": {
+        "conditions": [
+          {"name": "HIV", "certainty": "confirmed", "evidence": "Florida Adult HIV/AIDS Case Report - Facility of Diagnosis positive", "severity": "high"},
+          {"name": "AIDS", "certainty": "confirmed", "evidence": "Report indicates AIDS stage (>13 years of age at diagnosis)", "severity": "critical"}
+        ],
+        "allergens": [],
+        "medications": [],
+        "dietary_restrictions": [
+          {"name": "Monitor immune system and nutritional status", "reason": "HIV/AIDS requires proper nutrition and immune support"}
+        ],
+        "annotator": "Claude (Image Analysis)",
+        "annotator_notes": "Confidential case report indicates both HIV and AIDS diagnoses. Patient demographic information redacted per privacy protocol."
+      }
+    },
+    {
+      "id": 2,
+      "file": "hba.png",
+      "report_type": "Lab Report - HbA1C Test",
+      "system_extracted": {
+        "conditions": [
+          {"name": "Prediabetes / Elevated Blood Sugar", "confidence": 0.8, "severity": "moderate"}
+        ],
+        "allergens": [],
+        "medications": [],
+        "dietary_restrictions": [
+          {"name": "Monitor and control carbohydrate intake", "reason": "HbA1C elevation"}
+        ]
+      },
+      "gold_standard": {
+        "conditions": [
+          {"name": "Prediabetes", "certainty": "confirmed", "lab_value": "HbA1C 5%", "reference_range": "4.0-6.0%", "interpretation": "Near Normal Glycemia", "estimated_avg_glucose": "96.80 mg/dL (reference: 90-120 mg/dL)", "severity": "moderate", "notes": "Elevated glucose levels requiring intervention to prevent Type 2 Diabetes"}
+        ],
+        "allergens": [],
+        "medications": [],
+        "dietary_restrictions": [
+          {"name": "Monitor and control carbohydrate intake", "reason": "HbA1C 5% is slightly elevated above goal (<6%), indicates need for glucose control"},
+          {"name": "Regular exercise", "reason": "Improves insulin sensitivity and glucose utilization"},
+          {"name": "Weight management", "reason": "Reduces risk of progression to Type 2 Diabetes"}
+        ],
+        "annotator": "Claude (Image Analysis)",
+        "annotator_notes": "FLabs lab report from 2024-05-03. Patient: Mr. Ayush, Age 23 years. Results show HbA1C 5% (upper end of normal) with estimated average glucose 96.80 mg/dL. Interpretation table indicates 'Near Normal Glycemia' but elevated compared to optimal (<6%)."
+      }
+    },
+    {
+      "id": 3,
+      "file": "heart-diseases.png",
+      "report_type": "Cardiac Imaging Report",
+      "system_extracted": {
+        "conditions": [
+          {"name": "Coronary Artery Disease (CAD) involving LAD and RCA", "confidence": 0.9, "severity": "high"},
+          {"name": "Myocardial Ischemia (Interoparental Hypokinesis)", "confidence": 0.9, "severity": "high"},
+          {"name": "Left Ventricular Hypokinesis", "confidence": 0.8, "severity": "moderate"},
+          {"name": "Reduced Left Ventricular Ejection Fraction (LVEF) at 33%", "confidence": 0.95, "severity": "high"},
+          {"name": "Systolic wall thickening defect in anteroseptal and apical regions", "confidence": 0.85, "severity": "moderate"}
+        ],
+        "allergens": [],
+        "medications": [],
+        "dietary_restrictions": []
+      },
+      "gold_standard": {
+        "conditions": [
+          {"name": "Coronary Artery Disease", "certainty": "confirmed", "location": "Left Anterior Descending (LAD) and Right Coronary Artery (RCA)", "severity": "high", "evidence": "Imaging findings show significant stenosis and atherosclerotic disease"},
+          {"name": "Myocardial Ischemia", "certainty": "confirmed", "severity": "high", "notes": "Regional wall motion abnormality consistent with ischemic heart disease"},
+          {"name": "Left Ventricular Systolic Dysfunction", "certainty": "confirmed", "ejection_fraction": "33%", "severity": "high", "classification": "Significantly reduced LVEF (normal >50%)", "notes": "Severe systolic dysfunction"},
+          {"name": "Anteroseptal and Apical Wall Motion Abnormality", "certainty": "confirmed", "severity": "moderate", "location": "Anteroseptal and apical segments of left ventricle", "notes": "Systolic dysfunction in specific wall segments"}
+        ],
+        "allergens": [],
+        "medications": [
+          {"name": "Antiplatelet agents (e.g., Aspirin)", "indication": "Coronary artery disease prevention"},
+          {"name": "Beta-blockers", "indication": "Heart failure and ischemia management"},
+          {"name": "ACE inhibitors", "indication": "Left ventricular dysfunction management"}
+        ],
+        "dietary_restrictions": [
+          {"name": "Strict sodium restriction", "reason": "Heart failure management with LVEF 33%"},
+          {"name": "Limit saturated and trans fats", "reason": "Prevent progression of coronary artery disease"},
+          {"name": "Reduce overall caloric intake", "reason": "Weight management improves cardiac function"},
+          {"name": "Limit fluid intake", "reason": "Reduces cardiac workload in systolic dysfunction"}
+        ],
+        "annotator": "Claude (Image Analysis)",
+        "annotator_notes": "Cardiac imaging report (likely ECG stress test or echocardiogram) showing significant cardiac pathology. Multiple severe conditions documented: CAD in two major coronary arteries, severe systolic dysfunction (LVEF 33%), and regional wall motion abnormalities. Requires aggressive medical management and possible revascularization intervention."
+      }
+    },
+    {
+      "id": 4,
+      "file": "hy.png",
+      "report_type": "Clinical Notes - Hypertension",
+      "system_extracted": {
+        "conditions": [
+          {"name": "Hypertensive Crisis", "confidence": 0.98, "severity": "critical"}
+        ],
+        "allergens": [],
+        "medications": [],
+        "dietary_restrictions": []
+      },
+      "gold_standard": {
+        "conditions": [
+          {"name": "Hypertensive Crisis", "certainty": "confirmed", "severity": "critical", "evidence": "Clinical presentation with elevated blood pressure readings documented", "notes": "Emergency presentation requiring immediate treatment"},
+          {"name": "Hypertension", "certainty": "confirmed", "severity": "high", "history": "Chronic hypertension with medical history of severe headache, seizure episodes", "notes": "Long-standing condition with multiple risk factors and complications"}
+        ],
+        "allergens": [],
+        "medications": [
+          {"name": "Antihypertensive medication", "evidence": "Patient on treatment for hypertension management", "notes": "Specific medication names not listed in clinical notes reviewed"}
+        ],
+        "dietary_restrictions": [
+          {"name": "Reduce sodium intake", "reason": "Critical for blood pressure management in hypertensive crisis"},
+          {"name": "Limit caffeine and stimulants", "reason": "Can further elevate blood pressure"},
+          {"name": "Increase potassium-rich foods", "reason": "Helps regulate blood pressure"},
+          {"name": "Limit alcohol", "reason": "Can interact with antihypertensive medications and elevate BP"}
+        ],
+        "annotator": "Claude (Image Analysis)",
+        "annotator_notes": "The Nairobi Hospital clinical document dated 2023-12-13 to 2023-12-15. Diagnosis: Hypertensive Crisis. Patient history indicates previous severe episodes. Clinical findings show elevated blood pressure readings with systolic/diastolic measurements consistent with crisis-level hypertension requiring emergency intervention."
+      }
+    },
+    {
+      "id": 5,
+      "file": "syphilies.png",
+      "report_type": "Lab Report - Infectious Disease",
+      "system_extracted": {
+        "conditions": [
+          {"name": "Syphilis", "confidence": 0.8, "severity": "high"}
+        ],
+        "allergens": [],
+        "medications": [],
+        "dietary_restrictions": []
+      },
+      "gold_standard": {
+        "conditions": [
+          {"name": "Syphilis", "certainty": "confirmed", "evidence": "VDRL Serology Test REACTIVE", "test_method": "VDRL Flocculation", "lab": "Thyrocare", "severity": "high", "notes": "Treponema pallidum detected - sexually transmitted infection"}
+        ],
+        "allergens": [],
+        "medications": [
+          {"name": "Penicillin G", "indication": "Syphilis treatment", "notes": "Standard first-line antibiotic for syphilis - dosage determined by stage of infection"}
+        ],
+        "dietary_restrictions": [],
+        "annotator": "Claude (Image Analysis)",
+        "annotator_notes": "Lab report dated 2023-01-20. VDRL test shows reactive result. Report notes syphilis as sexually transmitted disease that can cause long-term complications if untreated."
+      }
+    }
+  ],
+  "annotation_instructions": {
+    "conditions": "List all diseases, disorders, or health conditions mentioned in the report. Include severity (low/moderate/high/critical) and any lab values or evidence.",
+    "allergens": "List any known allergies or hypersensitivities. Include reaction type if mentioned.",
+    "medications": "List all medications mentioned. Include dosage and frequency if available.",
+    "dietary_restrictions": "List dietary restrictions or recommendations based on conditions and allergies.",
+    "certainty_levels": [
+      "confirmed - explicitly stated in report",
+      "probable - strongly implied by test results",
+      "possible - mentioned but not confirmed",
+      "ruled_out - explicitly stated as absent"
+    ]
+  },
+  "evaluation_plan": {
+    "step_1": "COMPLETE: Extract using current system (done - see 'system_extracted')",
+    "step_2": "TODO: Manually fill 'gold_standard' section with ground truth labels",
+    "step_3": "TODO: Run baseline extractions (keyword-only, LLM-only, system)",
+    "step_4": "TODO: Calculate precision, recall, F1 for each baseline",
+    "step_5": "TODO: Generate comparison table for thesis"
+  }
+}

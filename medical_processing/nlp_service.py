@@ -759,11 +759,22 @@ Keep language clear for patients, not overly technical. Be specific about values
                         'extraction_method': 'Claude Vision'
                     }
 
-            # Only use mock data if we still have no text after all extraction attempts
+            # Fail if we have no text - don't use mock data
             if not raw_text or len(raw_text.strip()) < 10:
-                logger.warning('⚠️ Could not extract meaningful text from file, using mock data for processing')
-                is_mock_data = True
-                raw_text = MedicalDocumentProcessor._mock_document_text()
+                logger.error('❌ Could not extract meaningful text from file - all methods failed')
+                return {
+                    'raw_text': '',
+                    'clinical_summary': None,
+                    'report_type': 'Unknown',
+                    'completeness': 0,
+                    'missing_sections': [],
+                    'conditions': [],
+                    'allergens': [],
+                    'dietary_restrictions': [],
+                    'is_mock': False,
+                    'extraction_method': 'failed',
+                    'error': 'Could not extract text from document. Ensure document is clear and readable.'
+                }
 
         # Always do keyword matching as fallback/supplement
         logger.info('📚 Running keyword-based extraction...')
