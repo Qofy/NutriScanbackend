@@ -48,15 +48,25 @@ class YOLOFoodDetector:
             raise RuntimeError("❌ CRITICAL: YOLO model not loaded. Real food detection is REQUIRED.")
 
         try:
-            # YOLO works best with file paths; if PIL Image, convert to path
+            # YOLO works best with file paths; if PIL Image or Django file, convert to path
             if isinstance(image_file, str):
                 # File path - pass directly to YOLO
                 results = self.model.predict(image_file, conf=0.15)
             else:
-                # PIL Image object - save temporarily and use path
+                # Django InMemoryUploadedFile or PIL Image - save temporarily and use path
                 import tempfile
                 with tempfile.NamedTemporaryFile(suffix='.jpg', delete=False) as tmp:
-                    image_file.save(tmp.name)
+                    # Handle both PIL Images and Django uploaded files
+                    if hasattr(image_file, 'read'):
+                        # Django file-like object (InMemoryUploadedFile, TemporaryUploadedFile)
+                        tmp.write(image_file.read())
+                    elif hasattr(image_file, 'save'):
+                        # PIL Image object
+                        image_file.save(tmp.name)
+                    else:
+                        raise ValueError(f"Unsupported image_file type: {type(image_file)}")
+
+                    tmp.flush()
                     results = self.model.predict(tmp.name, conf=0.15)
                     os.unlink(tmp.name)
 
