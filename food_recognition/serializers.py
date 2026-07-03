@@ -28,7 +28,7 @@ class FoodAnalysisListSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = FoodAnalysis
-        fields = ['id', 'image', 'uploaded_at', 'recognized_items', 'safety_level', 'is_manual']
+        fields = ['id', 'image', 'uploaded_at', 'recognized_items', 'safety_level', 'confidence_score', 'is_manual']
 
     def get_image(self, obj):
         request = self.context.get('request')
