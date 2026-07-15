@@ -229,36 +229,40 @@ class RecommendationViewSet(viewsets.ModelViewSet):
                 user_country=user_country
             )
 
-            # Save recommendations to database
-            created_recommendations = []
-            for rec in ai_recommendations:
-                # Get condition from AI response
-                rec_condition = rec.get('condition', 'general')
+            # If user is authenticated, save recommendations to database
+            if user and user.is_authenticated:
+                created_recommendations = []
+                for rec in ai_recommendations:
+                    # Get condition from AI response
+                    rec_condition = rec.get('condition', 'general')
 
-                # Validate that condition is one of user's actual conditions
-                # If not, use the first user condition as fallback
-                user_conditions = health_profile.get('conditions', [])
-                if user_conditions and rec_condition.lower() not in [c.lower() for c in user_conditions]:
-                    rec_condition = user_conditions[0]
-                elif not user_conditions:
-                    rec_condition = 'general'
+                    # Validate that condition is one of user's actual conditions
+                    user_conditions = health_profile.get('conditions', [])
+                    if user_conditions and rec_condition.lower() not in [c.lower() for c in user_conditions]:
+                        rec_condition = user_conditions[0]
+                    elif not user_conditions:
+                        rec_condition = 'general'
 
-                recommendation_obj = Recommendation.objects.create(
-                    user=user,
-                    food_item=rec.get('food_item', 'Unknown'),
-                    description=rec.get('description', ''),
-                    condition=rec_condition,
-                    benefit=rec.get('benefit', ''),
-                    severity=rec.get('severity', 'safe'),
-                    nutritional_info=rec.get('nutritional_info', {}),
-                    based_on_food_analysis=bool(recent_foods),
-                    based_on_medical_report=bool(medical_reports)
-                )
-                created_recommendations.append(recommendation_obj)
+                    recommendation_obj = Recommendation.objects.create(
+                        user=user,
+                        food_item=rec.get('food_item', 'Unknown'),
+                        description=rec.get('description', ''),
+                        condition=rec_condition,
+                        benefit=rec.get('benefit', ''),
+                        severity=rec.get('severity', 'safe'),
+                        nutritional_info=rec.get('nutritional_info', {}),
+                        based_on_food_analysis=bool(recent_foods),
+                        based_on_medical_report=bool(medical_reports)
+                    )
+                    created_recommendations.append(recommendation_obj)
 
-            logger.info(f"✅ Created {len(created_recommendations)} smart recommendations")
-            serializer = RecommendationSerializer(created_recommendations, many=True)
-            return Response(serializer.data, status=status.HTTP_201_CREATED)
+                logger.info(f"✅ Created {len(created_recommendations)} smart recommendations")
+                serializer = RecommendationSerializer(created_recommendations, many=True)
+                return Response(serializer.data, status=status.HTTP_201_CREATED)
+            else:
+                # User not authenticated - return recommendations without saving
+                logger.info(f"ℹ️ Generated {len(ai_recommendations)} recommendations (not saved - user not authenticated)")
+                return Response(ai_recommendations, status=status.HTTP_200_OK)
 
         except Exception as e:
             logger.error(f"❌ Smart generate error: {str(e)}", exc_info=True)
