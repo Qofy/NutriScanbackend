@@ -9,7 +9,7 @@ from .models import UserHealthProfile, DailyTracking, SavedFood
 from .serializers import UserHealthProfileSerializer, DailyTrackingSerializer, SavedFoodSerializer, UserSerializer
 
 class UserHealthProfileViewSet(viewsets.ViewSet):
-    permission_classes = [IsAuthenticated]
+    permission_classes = [AllowAny]
     def retrieve(self, request):
         try:
             profile, created = UserHealthProfile.objects.get_or_create(user=request.user)
@@ -68,10 +68,10 @@ class UserHealthProfileViewSet(viewsets.ViewSet):
 
 class DailyTrackingViewSet(viewsets.ModelViewSet):
     serializer_class = DailyTrackingSerializer
-    permission_classes = [IsAuthenticated]
+    permission_classes = [AllowAny]
 
     def get_queryset(self):
-        return DailyTracking.objects.filter(user=self.request.user)
+        return DailyTracking.objects.all()
 
     def create(self, request):
         data = request.data.copy()
@@ -95,12 +95,10 @@ class DailyTrackingViewSet(viewsets.ModelViewSet):
 
 class SavedFoodViewSet(viewsets.ModelViewSet):
     serializer_class = SavedFoodSerializer
-    permission_classes = [IsAuthenticated]
+    permission_classes = [AllowAny]
 
     def get_queryset(self):
-        if self.request.user and self.request.user.is_authenticated:
-            return SavedFood.objects.filter(user=self.request.user)
-        return SavedFood.objects.none()
+        return SavedFood.objects.all()
 
     def create(self, request):
         data = request.data.copy()

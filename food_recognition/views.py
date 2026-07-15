@@ -17,11 +17,11 @@ logger = logging.getLogger(__name__)
 class FoodAnalysisViewSet(viewsets.ModelViewSet):
     serializer_class = FoodAnalysisSerializer
     parser_classes = (JSONParser, MultiPartParser, FormParser)
-    permission_classes = [IsAuthenticated]
+    permission_classes = [AllowAny]
 
     def get_queryset(self):
-        # Only return analyses for the authenticated user
-        return FoodAnalysis.objects.filter(user=self.request.user)
+        # Return all analyses (no user filtering)
+        return FoodAnalysis.objects.all()
 
     @action(detail=False, methods=['post'])
     def manual_analyze(self, request):

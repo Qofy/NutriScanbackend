@@ -14,11 +14,11 @@ logger = logging.getLogger(__name__)
 class MedicalReportViewSet(viewsets.ModelViewSet):
     serializer_class = MedicalReportSerializer
     parser_classes = (MultiPartParser, FormParser)
-    permission_classes = [IsAuthenticated]
+    permission_classes = [AllowAny]
 
     def get_queryset(self):
-        # Only return reports for the authenticated user
-        return MedicalReport.objects.filter(user=self.request.user)
+        # Return all reports (no user filtering)
+        return MedicalReport.objects.all()
 
     def destroy(self, request, *args, **kwargs):
         """Delete medical report and associated recommendations"""
