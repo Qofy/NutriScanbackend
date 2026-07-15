@@ -106,11 +106,12 @@ CORS_ALLOWED_ORIGINS = [
     'http://localhost:8000',
     'http://127.0.0.1:3000',
     'http://127.0.0.1:8000',
-    'https://nutri-scan-murex.vercel.app',  # ✅ YOUR VERCEL FRONTEND
+    'https://nutri-scan-murex.vercel.app',
     'https://nutri-scan-git-main-safo-kofi-agyekums-projects.vercel.app',
     'https://nutriscan.ink',
     'http://nutriscan.ink',
-    'https://web-production-cc1b9.up.railway.app',  # Backend (allow self for internal requests)
+    'https://web-production-cc1b9.up.railway.app',
+    'https://*.vercel.app',
 ]
 
 CORS_ALLOW_CREDENTIALS = True
