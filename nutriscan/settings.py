@@ -110,8 +110,11 @@ CORS_ALLOWED_ORIGINS = [
     'https://nutri-scan-git-main-safo-kofi-agyekums-projects.vercel.app',
     'https://nutriscan.ink',
     'http://nutriscan.ink',
-    'https://web-production-cc1b9.up.railway.app',
-    'https://*.vercel.app',
+]
+
+CORS_ALLOWED_ORIGIN_REGEXES = [
+    r'^https://.*\.vercel\.app$',
+    r'^https://.*\.railway\.app$',
 ]
 
 CORS_ALLOW_CREDENTIALS = True
