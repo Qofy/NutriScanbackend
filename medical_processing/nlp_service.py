@@ -784,6 +784,14 @@ Keep language clear for patients, not overly technical. Be specific about values
 
         logger.info(f"✓ Keyword extraction found: {len(conditions)} conditions, {len(allergens)} allergens, {len(restrictions)} restrictions")
 
+        # If no data was extracted, provide a helpful message but don't fail
+        if not conditions and not allergens and not restrictions:
+            logger.warning("⚠️ No health data extracted from document - text may not contain medical information")
+            conditions = [{'condition': 'general_health_assessment', 'confidence': 0.5, 'severity': 'low'}]
+            allergens = []
+            restrictions = []
+            is_mock_data = True
+
         # Generate comprehensive clinical summary with report assessment
         extraction_method = 'keyword' if not is_mock_data else 'mock'
         logger.info('📋 Generating comprehensive clinical summary with report assessment...')
