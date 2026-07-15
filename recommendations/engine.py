@@ -175,9 +175,15 @@ class RecommendationEngine:
                     continue
 
                 if has_match or not food.get('conditions'):
-                    recommendations.append(food)
+                    # Transform to match API response format
+                    transformed = food.copy()
+                    transformed['condition'] = food.get('conditions', ['general'])[0] if food.get('conditions') else 'general'
+                    recommendations.append(transformed)
             else:
-                recommendations.append(food)
+                # Transform to match API response format
+                transformed = food.copy()
+                transformed['condition'] = food.get('conditions', ['general'])[0] if food.get('conditions') else 'general'
+                recommendations.append(transformed)
 
         return sorted(recommendations, key=lambda x: x.get('severity') == 'safe', reverse=True)
 
