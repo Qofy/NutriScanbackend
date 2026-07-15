@@ -157,6 +157,7 @@ if not all(FIREBASE_CONFIG.values()):
 USDA_API_KEY = os.getenv('USDA_API_KEY', '')
 ANTHROPIC_API_KEY = os.getenv('ANTHROPIC_API_KEY', '')
 OLLAMA_API_KEY = os.getenv('OLLAMA_API_KEY', '')
+OLLAMA_URL = os.getenv('OLLAMA_URL', 'https://ollama.com')
 
 # Cloudinary Configuration for file storage
 import cloudinary

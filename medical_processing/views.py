@@ -104,6 +104,7 @@ class MedicalReportViewSet(viewsets.ModelViewSet):
             medical_report.extracted_data = {
                 'conditions': result['conditions'],
                 'allergens': result['allergens'],
+                'medications': result.get('medications', []),
                 'dietary_restrictions': result['dietary_restrictions'],
                 'is_mock': result.get('is_mock', False),
                 'extraction_method': result.get('extraction_method', 'unknown'),

@@ -24,24 +24,44 @@ def _get_ocr_reader():
 
 COMMON_HEALTH_CONDITIONS = {
     'diabetes': {
-        'keywords': ['diabetes', 'blood sugar', 'glucose', 'insulin'],
+        'keywords': ['diabetes', 'blood sugar', 'glucose', 'insulin', 'hba1c', 'glycemic', 'fasting glucose', 'type 2', 'type 1'],
         'severity': 'high',
         'dietary_restrictions': ['high_sugar_foods', 'refined_carbs']
     },
     'hypertension': {
-        'keywords': ['hypertension', 'high blood pressure', 'stage 1', 'stage 2'],
+        'keywords': ['hypertension', 'high blood pressure', 'stage 1', 'stage 2', 'elevated bp', 'systolic', 'diastolic'],
         'severity': 'high',
         'dietary_restrictions': ['high_sodium_foods', 'processed_foods']
     },
     'cholesterol': {
-        'keywords': ['cholesterol', 'high cholesterol', 'lipid'],
+        'keywords': ['cholesterol', 'high cholesterol', 'lipid', 'ldl', 'hdl', 'triglyceride', 'hyperlipidemia'],
         'severity': 'moderate',
         'dietary_restrictions': ['saturated_fat', 'trans_fat']
     },
     'heart_disease': {
-        'keywords': ['heart disease', 'cardiac', 'coronary', 'arrhythmia'],
+        'keywords': ['heart disease', 'cardiac', 'coronary', 'arrhythmia', 'myocardial', 'heart failure', 'angina'],
         'severity': 'critical',
         'dietary_restrictions': ['high_sodium', 'saturated_fat']
+    },
+    'kidney_disease': {
+        'keywords': ['kidney disease', 'renal', 'creatinine', 'bun', 'glomerular', 'nephritis'],
+        'severity': 'high',
+        'dietary_restrictions': ['high_potassium', 'high_sodium', 'high_phosphorus']
+    },
+    'liver_disease': {
+        'keywords': ['liver disease', 'hepatitis', 'cirrhosis', 'alt', 'ast', 'liver function'],
+        'severity': 'high',
+        'dietary_restrictions': ['alcohol', 'high_protein', 'high_fat']
+    },
+    'thyroid_disease': {
+        'keywords': ['thyroid', 'hypothyroid', 'hyperthyroid', 'tsh', 't3', 't4'],
+        'severity': 'moderate',
+        'dietary_restrictions': ['high_iodine', 'high_caffeine']
+    },
+    'asthma': {
+        'keywords': ['asthma', 'asthmatic', 'respiratory', 'bronchial', 'airway'],
+        'severity': 'moderate',
+        'dietary_restrictions': ['high_sulfites', 'high_salt']
     },
 }
 
@@ -54,6 +74,19 @@ COMMON_ALLERGENS = {
     'fish': ['fish', 'salmon', 'cod', 'tuna'],
     'soy': ['soy', 'soybean'],
     'eggs': ['egg', 'egg white'],
+}
+
+COMMON_MEDICATIONS = {
+    'metformin': ['metformin', 'glucophage'],
+    'lisinopril': ['lisinopril', 'prinivil'],
+    'atorvastatin': ['atorvastatin', 'lipitor'],
+    'amlodipine': ['amlodipine', 'norvasc'],
+    'aspirin': ['aspirin', 'acetylsalicylic'],
+    'omeprazole': ['omeprazole', 'prilosec'],
+    'levothyroxine': ['levothyroxine', 'synthroid'],
+    'albuterol': ['albuterol', 'salbutamol'],
+    'warfarin': ['warfarin', 'coumadin'],
+    'insulin': ['insulin', 'lantus', 'humalog'],
 }
 
 class MedicalDocumentProcessor:
@@ -268,6 +301,24 @@ class MedicalDocumentProcessor:
         return restrictions
 
     @staticmethod
+    def extract_medications(text):
+        """Extract medications mentioned in the medical report"""
+        medications = []
+        text_lower = text.lower()
+
+        for med_name, keywords in COMMON_MEDICATIONS.items():
+            for keyword in keywords:
+                if keyword in text_lower:
+                    medications.append({
+                        'medication': med_name.title(),
+                        'confidence': 0.85,
+                        'found_in_report': True
+                    })
+                    break
+
+        return medications
+
+    @staticmethod
     def extract_with_ollama_vision(pdf_file):
         """Use Ollama vision to extract medical info from image-based PDFs or images"""
         try:
@@ -278,7 +329,8 @@ class MedicalDocumentProcessor:
                 logger.warning('❌ Ollama API key not configured for vision')
                 return None
 
-            logger.info('👁️ Using Ollama vision to extract from image-based PDF...')
+            ollama_url = getattr(settings, 'OLLAMA_URL', 'https://ollama.com')
+            logger.info(f'👁️ Using Ollama vision ({ollama_url}) to extract from image-based PDF...')
 
             # Read the file
             pdf_file.seek(0)
@@ -315,7 +367,7 @@ Extract and return ONLY a valid JSON object with this exact structure:
 Be thorough and extract ALL mentioned allergens, conditions, and restrictions from the document.
 Return ONLY valid JSON, no markdown, no other text."""
 
-            url = 'https://ollama.com/api/chat'
+            url = f'{ollama_url}/api/chat'
             headers = {
                 'Authorization': f'Bearer {api_key}',
                 'Content-Type': 'application/json'
@@ -351,14 +403,16 @@ Return ONLY valid JSON, no markdown, no other text."""
                 logger.info('✅ Ollama vision extraction successful')
                 return result
             else:
-                logger.warning(f'❌ Ollama API error: {response.status_code}')
+                logger.error(f'❌ Ollama API error: {response.status_code}')
+                logger.error(f'Response: {response.text}')
                 return None
 
         except json.JSONDecodeError as e:
-            logger.warning(f'❌ Failed to parse Ollama vision response: {e}')
+            logger.error(f'❌ Failed to parse Ollama vision response: {e}')
+            logger.error(f'Response text: {response.text if "response" in locals() else "N/A"}')
             return None
         except Exception as e:
-            logger.warning(f'❌ Ollama vision extraction failed: {e}')
+            logger.error(f'❌ Ollama vision extraction failed: {e}', exc_info=True)
             return None
 
     @staticmethod
@@ -598,6 +652,8 @@ Return ONLY a JSON object (no markdown, no other text) with this exact structure
                 logger.warning('❌ Claude API key not configured for summary')
                 return None
 
+            logger.info('📝 Generating clinical summary with Claude API...')
+
             logger.info('📝 Generating clinical summary with report assessment...')
 
             # Analyze what's in the report
@@ -725,41 +781,50 @@ Keep language clear for patients, not overly technical. Be specific about values
             logger.error(f"❌ File processing error: {e}", exc_info=True)
             raw_text = ''
 
-        # If text extraction failed, try vision APIs for image-based documents
+        # If text extraction failed, try OCR first for image-based documents
         if not raw_text or len(raw_text.strip()) < 10:
             if file_obj.name.endswith(('.pdf', '.png', '.jpg', '.jpeg')):
-                logger.info('📸 Text extraction failed, trying vision APIs for image-based document...')
+                logger.info('📸 Text extraction failed, trying OCR for image-based document...')
 
-                # Try Ollama vision
+                # Try OCR first
                 file_obj.seek(0)
-                vision_result = MedicalDocumentProcessor.extract_with_ollama_vision(file_obj)
-                if vision_result:
-                    logger.info('✅ Ollama vision extraction successful')
-                    return {
-                        'raw_text': 'Extracted via Ollama vision',
-                        'conditions': vision_result.get('conditions', []),
-                        'allergens': vision_result.get('allergens', []),
-                        'dietary_restrictions': vision_result.get('dietary_restrictions', []),
-                        'is_mock': False,
-                        'extraction_method': 'Ollama Vision'
-                    }
+                ocr_text = MedicalDocumentProcessor.extract_text_with_ocr(file_obj)
+                if ocr_text and len(ocr_text.strip()) > 10:
+                    logger.info(f'✅ OCR extraction successful: {len(ocr_text)} characters')
+                    raw_text = ocr_text
+                else:
+                    logger.warning('⚠️ OCR extraction failed or returned insufficient text, trying vision APIs...')
 
-                # Fall back to Claude vision if available
-                logger.info('⚠️ Trying Claude vision...')
-                file_obj.seek(0)
-                vision_result = MedicalDocumentProcessor.extract_with_claude_vision(file_obj)
-                if vision_result:
-                    logger.info('✅ Claude vision extraction successful')
-                    return {
-                        'raw_text': 'Extracted via vision API',
-                        'conditions': vision_result.get('conditions', []),
-                        'allergens': vision_result.get('allergens', []),
-                        'dietary_restrictions': vision_result.get('dietary_restrictions', []),
-                        'is_mock': False,
-                        'extraction_method': 'Claude Vision'
-                    }
+                    # Try Ollama vision
+                    file_obj.seek(0)
+                    vision_result = MedicalDocumentProcessor.extract_with_ollama_vision(file_obj)
+                    if vision_result:
+                        logger.info('✅ Ollama vision extraction successful')
+                        return {
+                            'raw_text': 'Extracted via Ollama vision',
+                            'conditions': vision_result.get('conditions', []),
+                            'allergens': vision_result.get('allergens', []),
+                            'dietary_restrictions': vision_result.get('dietary_restrictions', []),
+                            'is_mock': False,
+                            'extraction_method': 'Ollama Vision'
+                        }
 
-            # Fail if we have no text - don't use mock data
+                    # Fall back to Claude vision if available
+                    logger.info('⚠️ Trying Claude vision...')
+                    file_obj.seek(0)
+                    vision_result = MedicalDocumentProcessor.extract_with_claude_vision(file_obj)
+                    if vision_result:
+                        logger.info('✅ Claude vision extraction successful')
+                        return {
+                            'raw_text': 'Extracted via vision API',
+                            'conditions': vision_result.get('conditions', []),
+                            'allergens': vision_result.get('allergens', []),
+                            'dietary_restrictions': vision_result.get('dietary_restrictions', []),
+                            'is_mock': False,
+                            'extraction_method': 'Claude Vision'
+                        }
+
+            # If we still have no text, this is an error
             if not raw_text or len(raw_text.strip()) < 10:
                 logger.error('❌ Could not extract meaningful text from file - all methods failed')
                 return {
@@ -780,17 +845,10 @@ Keep language clear for patients, not overly technical. Be specific about values
         logger.info('📚 Running keyword-based extraction...')
         conditions = MedicalDocumentProcessor.extract_health_conditions(raw_text)
         allergens = MedicalDocumentProcessor.extract_allergens(raw_text)
+        medications = MedicalDocumentProcessor.extract_medications(raw_text)
         restrictions = MedicalDocumentProcessor.extract_dietary_restrictions(raw_text, conditions)
 
-        logger.info(f"✓ Keyword extraction found: {len(conditions)} conditions, {len(allergens)} allergens, {len(restrictions)} restrictions")
-
-        # If no data was extracted, provide a helpful message but don't fail
-        if not conditions and not allergens and not restrictions:
-            logger.warning("⚠️ No health data extracted from document - text may not contain medical information")
-            conditions = [{'condition': 'general_health_assessment', 'confidence': 0.5, 'severity': 'low'}]
-            allergens = []
-            restrictions = []
-            is_mock_data = True
+        logger.info(f'✅ Extracted: {len(conditions)} conditions, {len(allergens)} allergens, {len(medications)} medications')
 
         # Generate comprehensive clinical summary with report assessment
         extraction_method = 'keyword' if not is_mock_data else 'mock'
@@ -811,6 +869,7 @@ Keep language clear for patients, not overly technical. Be specific about values
             'missing_sections': clinical_summary_result.get('missing_sections') if clinical_summary_result else [],
             'conditions': conditions,
             'allergens': allergens,
+            'medications': medications,
             'dietary_restrictions': restrictions,
             'is_mock': is_mock_data,
             'extraction_method': extraction_method
