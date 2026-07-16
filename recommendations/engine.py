@@ -394,8 +394,5 @@ Ensure the FIRST 3 recommendations are {f'from {user_country}' if user_country e
                 logger.warning("⚠️ OLLAMA_API_KEY not configured")
                 raise Exception("Ollama API key not configured")
         except Exception as e:
-            logger.error(f"Ollama Cloud failed: {str(e)}")
-
-        # Fallback: Generate simple recommendations without Ollama
-        logger.warning("⚠️ Using fallback recommendation generation (no Ollama)")
-        return RecommendationEngine.generate_recommendations(health_profile)
+            logger.error(f"❌ Ollama Cloud failed: {str(e)}")
+            raise Exception(f"Failed to generate recommendations: {str(e)}")
