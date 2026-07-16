@@ -182,29 +182,27 @@ class RecommendationViewSet(viewsets.ModelViewSet):
                         else:
                             dietary_restrictions.append(restriction)
 
-            # If no conditions from medical reports, try user profile settings
+            # Get country from user profile (for cuisine selection: local vs continental)
             user_country = None
-            if not conditions and user:
-                try:
-                    from user_profile.models import UserHealthProfile
-                    profile = UserHealthProfile.objects.get(user=user)
-                    conditions = profile.health_conditions or []
-                    allergens.extend(profile.allergies or [])
-                    dietary_restrictions.extend(profile.dietary_restrictions or [])
-                    user_country = profile.country
-                    logger.info(f"✓ Got health profile from user settings")
-                except:
-                    pass
-            elif user:
-                # Get country from user profile even if conditions came from medical reports
+            if user:
                 try:
                     from user_profile.models import UserHealthProfile
                     profile = UserHealthProfile.objects.get(user=user)
                     user_country = profile.country
+                    logger.info(f"✓ User country: {user_country}")
                 except:
+                    logger.info(f"ℹ️ No country set in profile - will use continental recommendations")
                     pass
 
-            # Build health profile
+            # Ensure we have conditions from medical reports (PRIMARY source)
+            if not conditions:
+                logger.warning(f"⚠️ No health conditions found in medical reports")
+                return Response(
+                    {'error': 'No health conditions found in medical reports. Please upload a medical report first.'},
+                    status=status.HTTP_400_BAD_REQUEST
+                )
+
+            # Build health profile from medical data only
             health_profile = {
                 'conditions': list(set(conditions)),
                 'allergens': list(set(allergens)),
@@ -216,10 +214,12 @@ class RecommendationViewSet(viewsets.ModelViewSet):
             }
 
             logger.info(f"🔍 Generating smart recommendations")
-            logger.info(f"  PRIMARY source: Medical report data" if latest_medical_data else "  PRIMARY source: User health profile")
+            logger.info(f"  PRIMARY source: Medical report data ({len(conditions)} conditions)")
             logger.info(f"  SECONDARY source: Food scan history ({len(recent_foods)} foods)")
             if user_country:
-                logger.info(f"  TERTIARY source: Country-based recommendations ({user_country})")
+                logger.info(f"  TERTIARY source: Local cuisine ({user_country})")
+            else:
+                logger.info(f"  TERTIARY source: Continental recommendations (no country set)")
 
             # Generate AI recommendations with medical data as PRIMARY source
             ai_recommendations = RecommendationEngine.generate_ai_recommendations(
