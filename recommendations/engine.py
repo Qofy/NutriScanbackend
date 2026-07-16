@@ -351,7 +351,7 @@ Ensure the FIRST 3 recommendations are {f'from {user_country}' if user_country e
                         'Content-Type': 'application/json'
                     },
                     json={
-                        'model': 'ministral-3:8b',
+                        'model': 'mistral-large',
                         'messages': [{'role': 'user', 'content': prompt}],
                         'stream': False,
                         'temperature': 0.5
